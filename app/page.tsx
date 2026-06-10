@@ -1,13 +1,11 @@
-import Image from "next/image";
-
 const sistemas = [
   {
     id: 1,
-    nombre: "Sistema de Notas",
-    descripcion: "Registro y consulta de calificaciones estudiantiles escala 1.0 a 5.0",
-    icono: "📊",
+    nombre: "Autoevaluación Institucional",
+    descripcion: "Autoevaluación estudiantil por periodo académico, grados Transición a 11°",
+    icono: "✍️",
     color: "from-blue-500 to-blue-700",
-    url: "/sistemas/notas",
+    url: "/autoevaluacion",
     activo: true,
   },
   {
