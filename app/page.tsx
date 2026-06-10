@@ -118,6 +118,20 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Acceso Institucional */}
+      <section className="max-w-6xl mx-auto px-6 pb-6">
+        <div className="border-t border-gray-200 pt-6 flex flex-wrap justify-center gap-6">
+          <a href="/teacher"
+            className="flex items-center gap-2 text-sm text-gray-500 hover:text-blue-700 transition font-medium">
+            <span className="text-lg">👩‍🏫</span> Portal Docentes
+          </a>
+          <a href="/admin"
+            className="flex items-center gap-2 text-sm text-gray-500 hover:text-blue-700 transition font-medium">
+            <span className="text-lg">⚙️</span> Panel Administrador
+          </a>
+        </div>
+      </section>
+
       {/* Footer */}
       <footer className="text-center text-sm text-gray-400 py-8">
         © {new Date().getFullYear()} Colegio Londres — Todos los derechos reservados
