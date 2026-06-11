@@ -6,6 +6,10 @@ import { GRADE_NAMES } from '@/lib/teacher-data'
 const SESSION_KEY = 'teacher_session_v2'
 const SESSION_TTL = 8 * 60 * 60 * 1000 // 8 horas
 
+// Contraseña temporal compartida para todos los docentes
+// TODO: reemplazar por sistema OTP cuando se configure el proveedor de email
+const TEACHER_PASSWORD = 'Colondres1989'
+
 interface TeacherSession { email: string; nombre: string; expires: number }
 interface Group {
   grade: string; gradeLabel: string; materia: string; formType: string
@@ -36,26 +40,33 @@ function Ring({ pct, size = 64 }: { pct: number; size?: number }) {
 }
 
 export default function TeacherPage() {
-  const [phase, setPhase] = useState<'login' | 'otp' | 'dashboard'>('login')
-  const [loginEmail, setLoginEmail]     = useState('')
-  const [otpCode, setOtpCode]           = useState('')
-  const [loginError, setLoginError]     = useState('')
-  const [sending, setSending]           = useState(false)
-  const [verifying, setVerifying]       = useState(false)
+  // — Login por contraseña (activo) —
+  const [phase, setPhase] = useState<'login' | 'dashboard'>('login')
+  const [loginEmail, setLoginEmail]       = useState('')
+  const [loginPassword, setLoginPassword] = useState('')
+  const [loginError, setLoginError]       = useState('')
+  const [logging, setLogging]             = useState(false)
 
-  const [session, setSession]   = useState<TeacherSession | null>(null)
+  /* ── CÓDIGO OTP — comentado hasta configurar proveedor de email ──────────
+  // const [phase, setPhase] = useState<'login' | 'otp' | 'dashboard'>('login')
+  // const [otpCode, setOtpCode]   = useState('')
+  // const [sending, setSending]   = useState(false)
+  // const [verifying, setVerifying] = useState(false)
+  // ─────────────────────────────────────────────────────────────────────── */
+
+  const [session, setSession]     = useState<TeacherSession | null>(null)
   const [dashboard, setDashboard] = useState<DashboardData | null>(null)
-  const [loading, setLoading]   = useState(false)
+  const [loading, setLoading]     = useState(false)
   const [periodoFilter, setPeriodoFilter] = useState('')
 
   // Modales
-  const [pendingGroup, setPendingGroup]     = useState<Group | null>(null)
-  const [ciGroup, setCiGroup]               = useState<Group | null>(null)
-  const [ciItem1, setCiItem1]               = useState('')
-  const [ciItem2, setCiItem2]               = useState('')
-  const [savingCi, setSavingCi]             = useState(false)
-  const [notifying, setNotifying]           = useState(false)
-  const [notifyResult, setNotifyResult]     = useState('')
+  const [pendingGroup, setPendingGroup]   = useState<Group | null>(null)
+  const [ciGroup, setCiGroup]             = useState<Group | null>(null)
+  const [ciItem1, setCiItem1]             = useState('')
+  const [ciItem2, setCiItem2]             = useState('')
+  const [savingCi, setSavingCi]           = useState(false)
+  const [notifying, setNotifying]         = useState(false)
+  const [notifyResult, setNotifyResult]   = useState('')
 
   // Restaurar sesión guardada
   useEffect(() => {
@@ -88,39 +99,64 @@ export default function TeacherPage() {
     }
   }
 
-  async function handleSendOtp() {
+  // — Login con contraseña —
+  async function handleLogin() {
     if (!loginEmail.trim()) { setLoginError('Ingresa tu correo'); return }
-    setSending(true); setLoginError('')
+    if (!loginPassword)     { setLoginError('Ingresa tu contraseña'); return }
+    if (loginPassword !== TEACHER_PASSWORD) {
+      setLoginError('Contraseña incorrecta')
+      return
+    }
+    setLogging(true); setLoginError('')
     const r = await fetch('/api/teacher/otp', { method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'send', email: loginEmail.trim() }) })
+      body: JSON.stringify({ action: 'checkEmail', email: loginEmail.trim() }) })
     const d = await r.json()
-    setSending(false)
-    if (d.success) setPhase('otp')
-    else setLoginError(d.error || 'Error enviando código')
-  }
-
-  async function handleVerifyOtp() {
-    if (!otpCode.trim()) { setLoginError('Ingresa el código'); return }
-    setVerifying(true); setLoginError('')
-    const r = await fetch('/api/teacher/otp', { method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'verify', email: loginEmail.trim(), code: otpCode.trim() }) })
-    const d = await r.json()
-    setVerifying(false)
+    setLogging(false)
     if (d.success) {
       const sess: TeacherSession = { email: d.email, nombre: d.nombre, expires: Date.now() + SESSION_TTL }
       localStorage.setItem(SESSION_KEY, JSON.stringify(sess))
       setSession(sess); setPhase('dashboard')
     } else {
-      setLoginError(d.error || 'Código incorrecto')
+      setLoginError(d.error || 'Correo no registrado como docente')
     }
   }
+
+  /* ── CÓDIGO OTP — comentado hasta configurar proveedor de email ──────────
+  // async function handleSendOtp() {
+  //   if (!loginEmail.trim()) { setLoginError('Ingresa tu correo'); return }
+  //   setSending(true); setLoginError('')
+  //   const r = await fetch('/api/teacher/otp', { method: 'POST',
+  //     headers: { 'Content-Type': 'application/json' },
+  //     body: JSON.stringify({ action: 'send', email: loginEmail.trim() }) })
+  //   const d = await r.json()
+  //   setSending(false)
+  //   if (d.success) setPhase('otp')
+  //   else setLoginError(d.error || 'Error enviando código')
+  // }
+  //
+  // async function handleVerifyOtp() {
+  //   if (!otpCode.trim()) { setLoginError('Ingresa el código'); return }
+  //   setVerifying(true); setLoginError('')
+  //   const r = await fetch('/api/teacher/otp', { method: 'POST',
+  //     headers: { 'Content-Type': 'application/json' },
+  //     body: JSON.stringify({ action: 'verify', email: loginEmail.trim(), code: otpCode.trim() }) })
+  //   const d = await r.json()
+  //   setVerifying(false)
+  //   if (d.success) {
+  //     const sess: TeacherSession = { email: d.email, nombre: d.nombre, expires: Date.now() + SESSION_TTL }
+  //     localStorage.setItem(SESSION_KEY, JSON.stringify(sess))
+  //     setSession(sess); setPhase('dashboard')
+  //   } else {
+  //     setLoginError(d.error || 'Código incorrecto')
+  //   }
+  // }
+  // ─────────────────────────────────────────────────────────────────────── */
 
   function handleLogout() {
     localStorage.removeItem(SESSION_KEY)
     setSession(null); setPhase('login'); setDashboard(null)
-    setLoginEmail(''); setOtpCode(''); setPeriodoFilter('')
+    setLoginEmail(''); setLoginPassword(''); setPeriodoFilter('')
   }
 
   function openCiModal(group: Group) {
@@ -183,7 +219,7 @@ export default function TeacherPage() {
   }
 
   // ====================================================== LOGIN
-  if (phase === 'login' || phase === 'otp') return (
+  if (phase === 'login') return (
     <div className="min-h-screen bg-blue-950 flex items-center justify-center px-4">
       <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-sm">
         <div className="text-center mb-6">
@@ -192,44 +228,33 @@ export default function TeacherPage() {
           <p className="text-sm text-gray-500">Colegio Londres</p>
         </div>
 
-        {phase === 'login' && (
-          <>
-            <p className="text-sm text-gray-600 mb-4 text-center">Ingresa tu correo institucional para recibir un código de acceso.</p>
-            <label className="block text-sm font-semibold text-blue-900 mb-1">Correo institucional</label>
-            <input type="email" value={loginEmail} onChange={e => { setLoginEmail(e.target.value); setLoginError('') }}
-              onKeyDown={e => e.key === 'Enter' && handleSendOtp()}
-              placeholder="tunombre@colegiolondres.edu.co"
-              className="w-full border-2 border-gray-200 rounded-lg p-3 text-sm focus:border-blue-900 outline-none mb-3" />
-            {loginError && <p className="text-red-500 text-sm mb-3">{loginError}</p>}
-            <button onClick={handleSendOtp} disabled={sending}
-              className="w-full bg-blue-900 text-white py-3 rounded-lg font-semibold text-sm hover:bg-blue-800 disabled:opacity-50">
-              {sending ? 'Enviando código...' : 'Recibir código OTP'}
-            </button>
-          </>
-        )}
+        <label className="block text-sm font-semibold text-blue-900 mb-1">Correo institucional</label>
+        <input type="email" value={loginEmail}
+          onChange={e => { setLoginEmail(e.target.value); setLoginError('') }}
+          onKeyDown={e => e.key === 'Enter' && handleLogin()}
+          placeholder="tunombre@colegiolondres.edu.co"
+          className="w-full border-2 border-gray-200 rounded-lg p-3 text-sm focus:border-blue-900 outline-none mb-3" />
 
-        {phase === 'otp' && (
-          <>
-            <p className="text-sm text-gray-600 mb-4 text-center">
-              Código enviado a <strong>{loginEmail}</strong>. Revisa tu correo e ingresa el código de 6 dígitos.
-            </p>
-            <label className="block text-sm font-semibold text-blue-900 mb-1">Código de acceso</label>
-            <input type="text" inputMode="numeric" maxLength={6} value={otpCode}
-              onChange={e => { setOtpCode(e.target.value); setLoginError('') }}
-              onKeyDown={e => e.key === 'Enter' && handleVerifyOtp()}
-              placeholder="000000"
-              className="w-full border-2 border-gray-200 rounded-lg p-3 text-center text-2xl font-bold tracking-widest focus:border-blue-900 outline-none mb-3" />
-            {loginError && <p className="text-red-500 text-sm mb-3 text-center">{loginError}</p>}
-            <button onClick={handleVerifyOtp} disabled={verifying}
-              className="w-full bg-blue-900 text-white py-3 rounded-lg font-semibold text-sm hover:bg-blue-800 disabled:opacity-50 mb-2">
-              {verifying ? 'Verificando...' : 'Ingresar al portal'}
-            </button>
-            <button onClick={() => { setPhase('login'); setOtpCode(''); setLoginError('') }}
-              className="w-full text-sm text-gray-400 hover:text-gray-600 py-2">
-              ← Cambiar correo
-            </button>
-          </>
-        )}
+        <label className="block text-sm font-semibold text-blue-900 mb-1">Contraseña</label>
+        <input type="password" value={loginPassword}
+          onChange={e => { setLoginPassword(e.target.value); setLoginError('') }}
+          onKeyDown={e => e.key === 'Enter' && handleLogin()}
+          placeholder="••••••••••"
+          className="w-full border-2 border-gray-200 rounded-lg p-3 text-sm focus:border-blue-900 outline-none mb-3" />
+
+        {loginError && <p className="text-red-500 text-sm mb-3">{loginError}</p>}
+
+        <button onClick={handleLogin} disabled={logging}
+          className="w-full bg-blue-900 text-white py-3 rounded-lg font-semibold text-sm hover:bg-blue-800 disabled:opacity-50">
+          {logging ? 'Verificando...' : 'Ingresar al portal'}
+        </button>
+
+        {/* ── BOTÓN OTP — comentado hasta configurar email ──────────────────
+        <button onClick={handleSendOtp} disabled={sending}
+          className="w-full bg-blue-900 text-white py-3 rounded-lg font-semibold text-sm hover:bg-blue-800 disabled:opacity-50">
+          {sending ? 'Enviando código...' : 'Recibir código OTP'}
+        </button>
+        ─────────────────────────────────────────────────────────────────── */}
 
         <p className="text-center text-xs text-gray-400 mt-6">
           <a href="/autoevaluacion" className="hover:text-gray-600">← Volver a autoevaluación</a>
@@ -237,6 +262,32 @@ export default function TeacherPage() {
       </div>
     </div>
   )
+
+  /* ── PANTALLA OTP — comentada hasta configurar email ──────────────────────
+  if (phase === 'otp') return (
+    <div className="min-h-screen bg-blue-950 flex items-center justify-center px-4">
+      <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-sm">
+        ...pantalla de ingreso de código OTP...
+        <p className="text-sm text-gray-600 mb-4 text-center">
+          Código enviado a <strong>{loginEmail}</strong>. Revisa tu correo.
+        </p>
+        <input type="text" inputMode="numeric" maxLength={6} value={otpCode}
+          onChange={e => { setOtpCode(e.target.value); setLoginError('') }}
+          onKeyDown={e => e.key === 'Enter' && handleVerifyOtp()}
+          placeholder="000000"
+          className="w-full border-2 border-gray-200 rounded-lg p-3 text-center text-2xl font-bold tracking-widest focus:border-blue-900 outline-none mb-3" />
+        <button onClick={handleVerifyOtp} disabled={verifying}
+          className="w-full bg-blue-900 text-white py-3 rounded-lg font-semibold text-sm hover:bg-blue-800 disabled:opacity-50 mb-2">
+          {verifying ? 'Verificando...' : 'Ingresar al portal'}
+        </button>
+        <button onClick={() => { setPhase('login'); setOtpCode(''); setLoginError('') }}
+          className="w-full text-sm text-gray-400 hover:text-gray-600 py-2">
+          ← Cambiar correo
+        </button>
+      </div>
+    </div>
+  )
+  ──────────────────────────────────────────────────────────────────────────── */
 
   // ====================================================== DASHBOARD
   return (

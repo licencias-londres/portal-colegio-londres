@@ -31,6 +31,11 @@ export async function POST(request: Request) {
 
   const teacherName = TEACHER_DATA[emailLower]?.nombre || 'Administrador'
 
+  // — VALIDAR CORREO (sin enviar código — usado por login con contraseña) —
+  if (action === 'checkEmail') {
+    return NextResponse.json({ success: true, email: emailLower, nombre: teacherName, isSuperAdmin })
+  }
+
   // — ENVIAR OTP —
   if (action === 'send') {
     const newCode  = generateCode()
