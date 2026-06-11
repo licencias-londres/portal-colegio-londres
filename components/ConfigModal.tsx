@@ -9,37 +9,54 @@ interface Props {
 
 export default function ConfigModal({ open, onClose }: Props) {
   const [tab, setTab] = useState<'general' | 'periodos' | 'estudiantes' | 'docentes'>('general')
-  const [cfg, setCfg] = useState<any>({})
-  const [saving, setSaving]   = useState(false)
-  const [saved,  setSaved]    = useState(false)
+  const [cfg, setCfg]     = useState<any>({})
+  const [saving, setSaving] = useState(false)
+  const [saved,  setSaved]  = useState(false)
 
-  // ── Estudiantes ────────────────────────────────────────────────────
+  // ── Estudiantes ────────────────────────────────────────────────────────────
   const [students,  setStudents]  = useState<any[]>([])
   const [loadingSt, setLoadingSt] = useState(false)
-  const [stNombre, setStNombre]   = useState('')
-  const [stEmail,  setStEmail]    = useState('')
-  const [stGrado,  setStGrado]    = useState('')
-  const [addingSt, setAddingSt]   = useState(false)
-  const [stFilter, setStFilter]   = useState('')
+  const [stNombre,  setStNombre]  = useState('')
+  const [stEmail,   setStEmail]   = useState('')
+  const [stGrado,   setStGrado]   = useState('')
+  const [addingSt,  setAddingSt]  = useState(false)
+  const [stFilter,  setStFilter]  = useState('')
 
-  // ── Docentes ───────────────────────────────────────────────────────
-  const [docentes,   setDocentes]   = useState<any[]>([])
-  const [loadingDoc, setLoadingDoc] = useState(false)
-  const [docEmail,   setDocEmail]   = useState('')
-  const [docNombre,  setDocNombre]  = useState('')
-  const [docGrado,   setDocGrado]   = useState('')
-  const [docMateria, setDocMateria] = useState('')
-  const [addingDoc,  setAddingDoc]  = useState(false)
-  const [docFilter,  setDocFilter]  = useState('')
+  // ── Docentes — lista ───────────────────────────────────────────────────────
+  const [docentes,    setDocentes]    = useState<any[]>([])
+  const [loadingDoc,  setLoadingDoc]  = useState(false)
+  const [docFilter,   setDocFilter]   = useState('')
   const [expandedDoc, setExpandedDoc] = useState<string | null>(null)
-  const [docError, setDocError] = useState('')
+
+  // ── Docentes — editar datos del docente ────────────────────────────────────
+  const [editNombre,  setEditNombre]  = useState('')
+  const [editEmail,   setEditEmail]   = useState('')
+  const [editSaving,  setEditSaving]  = useState(false)
+  const [editError,   setEditError]   = useState('')
+  const [editSaved,   setEditSaved]   = useState(false)
+
+  // ── Docentes — agregar asignación a docente existente ──────────────────────
+  const [addAssGrado,   setAddAssGrado]   = useState('')
+  const [addAssMateria, setAddAssMateria] = useState('')
+  const [addingAss,     setAddingAss]     = useState(false)
+  const [addAssError,   setAddAssError]   = useState('')
+
+  // ── Docentes — crear docente nuevo ────────────────────────────────────────
+  const [showNewDoc,     setShowNewDoc]     = useState(false)
+  const [newDocNombre,   setNewDocNombre]   = useState('')
+  const [newDocEmail,    setNewDocEmail]    = useState('')
+  const [newDocGrado,    setNewDocGrado]    = useState('')
+  const [newDocMateria,  setNewDocMateria]  = useState('')
+  const [creatingDoc,    setCreatingDoc]    = useState(false)
+  const [createDocError, setCreateDocError] = useState('')
 
   useEffect(() => {
-    if (open) { loadCfg(); setTab('general') }
+    if (open) { loadCfg(); setTab('general'); setExpandedDoc(null); setShowNewDoc(false) }
   }, [open])
 
   if (!open) return null
 
+  // ── Config ─────────────────────────────────────────────────────────────────
   async function loadCfg() {
     const r = await fetch('/api/config')
     setCfg(await r.json())
@@ -72,7 +89,7 @@ export default function ConfigModal({ open, onClose }: Props) {
     }))
   }
 
-  // ── Estudiantes ────────────────────────────────────────────────────
+  // ── Estudiantes ─────────────────────────────────────────────────────────────
   async function loadStudents() {
     setLoadingSt(true)
     const r = await fetch('/api/admin/students')
@@ -101,7 +118,7 @@ export default function ConfigModal({ open, onClose }: Props) {
     loadStudents()
   }
 
-  // ── Docentes ───────────────────────────────────────────────────────
+  // ── Docentes ────────────────────────────────────────────────────────────────
   async function loadDocentes() {
     setLoadingDoc(true)
     const r = await fetch('/api/admin/docentes')
@@ -110,24 +127,56 @@ export default function ConfigModal({ open, onClose }: Props) {
     if (d.success) setDocentes(d.docentes)
   }
 
-  async function addDocente() {
-    setDocError('')
-    if (!docEmail.trim() || !docNombre.trim() || !docGrado.trim() || !docMateria.trim()) {
-      setDocError('Todos los campos son requeridos'); return
+  function openTeacher(email: string, nombre: string) {
+    if (expandedDoc === email) {
+      setExpandedDoc(null)
+    } else {
+      setExpandedDoc(email)
+      setEditNombre(nombre)
+      setEditEmail(email)
+      setEditError('')
+      setEditSaved(false)
+      setAddAssGrado('')
+      setAddAssMateria('')
+      setAddAssError('')
     }
-    setAddingDoc(true)
+  }
+
+  async function saveDocEdit(originalEmail: string) {
+    setEditSaving(true); setEditError(''); setEditSaved(false)
     const r = await fetch('/api/admin/docentes', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: docEmail, nombre: docNombre, grado: docGrado, materia: docMateria })
+      method: 'PUT', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: originalEmail,
+        nombre: editNombre,
+        newEmail: editEmail.toLowerCase().trim() !== originalEmail ? editEmail : undefined
+      })
     })
     const d = await r.json()
-    setAddingDoc(false)
+    setEditSaving(false)
     if (d.success) {
-      setDocEmail(''); setDocNombre(''); setDocGrado(''); setDocMateria('')
-      loadDocentes()
+      setEditSaved(true)
+      setTimeout(() => setEditSaved(false), 3000)
+      await loadDocentes()
+      // Si cambió el correo, mantener el card abierto con el nuevo email
+      const finalEmail = editEmail.toLowerCase().trim()
+      setExpandedDoc(finalEmail !== originalEmail ? finalEmail : originalEmail)
     } else {
-      setDocError(d.error || 'Error al guardar')
+      setEditError(d.error || 'Error al guardar')
     }
+  }
+
+  async function addAssignment(email: string, nombre: string) {
+    if (!addAssGrado.trim() || !addAssMateria.trim()) { setAddAssError('Grado y materia son requeridos'); return }
+    setAddingAss(true); setAddAssError('')
+    const r = await fetch('/api/admin/docentes', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, nombre, grado: addAssGrado.trim(), materia: addAssMateria.trim() })
+    })
+    const d = await r.json()
+    setAddingAss(false)
+    if (d.success) { setAddAssGrado(''); setAddAssMateria(''); loadDocentes() }
+    else setAddAssError(d.error || 'Error al agregar')
   }
 
   async function deleteDocente(id: string) {
@@ -139,7 +188,33 @@ export default function ConfigModal({ open, onClose }: Props) {
     loadDocentes()
   }
 
-  // ── Agrupar docentes por email ─────────────────────────────────────
+  async function createNewDoc() {
+    if (!newDocNombre.trim() || !newDocEmail.trim() || !newDocGrado.trim() || !newDocMateria.trim()) {
+      setCreateDocError('Todos los campos son requeridos'); return
+    }
+    setCreatingDoc(true); setCreateDocError('')
+    const r = await fetch('/api/admin/docentes', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: newDocEmail.trim(), nombre: newDocNombre.trim(), grado: newDocGrado.trim(), materia: newDocMateria.trim() })
+    })
+    const d = await r.json()
+    setCreatingDoc(false)
+    if (d.success) {
+      const created = newDocEmail.toLowerCase().trim()
+      setNewDocNombre(''); setNewDocEmail(''); setNewDocGrado(''); setNewDocMateria('')
+      setShowNewDoc(false)
+      await loadDocentes()
+      setExpandedDoc(created)
+      setEditNombre(newDocNombre.trim())
+      setEditEmail(created)
+      setEditError(''); setEditSaved(false)
+      setAddAssGrado(''); setAddAssMateria(''); setAddAssError('')
+    } else {
+      setCreateDocError(d.error || 'Error al crear')
+    }
+  }
+
+  // ── Agrupación y filtros ─────────────────────────────────────────────────────
   const grouped: Record<string, { nombre: string; email: string; rows: any[] }> = {}
   for (const d of docentes) {
     if (!grouped[d.email]) grouped[d.email] = { nombre: d.nombre, email: d.email, rows: [] }
@@ -150,7 +225,7 @@ export default function ConfigModal({ open, onClose }: Props) {
     !docFilter ||
     g.nombre.toLowerCase().includes(docFilter.toLowerCase()) ||
     g.email.toLowerCase().includes(docFilter.toLowerCase()) ||
-    g.rows.some(r => r.materia.toLowerCase().includes(docFilter.toLowerCase()) || r.grado.toLowerCase().includes(docFilter.toLowerCase()))
+    g.rows.some(r => r.materia.toLowerCase().includes(docFilter.toLowerCase()) || String(r.grado).toLowerCase().includes(docFilter.toLowerCase()))
   )
 
   const filteredStudents = students.filter(s =>
@@ -160,10 +235,10 @@ export default function ConfigModal({ open, onClose }: Props) {
   )
 
   const TABS = [
-    { id: 'general',      label: '📋 General' },
-    { id: 'periodos',     label: '📅 Períodos' },
-    { id: 'estudiantes',  label: '👥 Estudiantes' },
-    { id: 'docentes',     label: '🎓 Docentes' },
+    { id: 'general',     label: '📋 General' },
+    { id: 'periodos',    label: '📅 Períodos' },
+    { id: 'estudiantes', label: '👥 Estudiantes' },
+    { id: 'docentes',    label: '🎓 Docentes' },
   ] as const
 
   return (
@@ -194,7 +269,7 @@ export default function ConfigModal({ open, onClose }: Props) {
           ))}
         </div>
 
-        {/* ── CONTENT ─────────────────────────────────────────────────── */}
+        {/* ── CONTENT ─────────────────────────────────────────────────────────── */}
         <div className="overflow-y-auto flex-1 p-6">
 
           {/* GENERAL */}
@@ -380,75 +455,161 @@ export default function ConfigModal({ open, onClose }: Props) {
           {/* DOCENTES */}
           {tab === 'docentes' && (
             <div>
-              <div className="bg-gray-50 rounded-xl p-4 mb-4">
-                <p className="text-xs font-bold text-gray-600 mb-3">Agregar asignación docente</p>
-                <p className="text-xs text-gray-500 mb-3">Una fila por combinación docente + grado + materia. El correo es el que usa para iniciar sesión.</p>
-                <div className="grid grid-cols-2 gap-2 mb-2">
-                  <input type="email" value={docEmail} onChange={e => setDocEmail(e.target.value)}
-                    placeholder="correo@colegiolondres.edu.co"
-                    className="col-span-2 border border-gray-200 rounded-lg p-2 text-sm text-gray-900 outline-none focus:border-blue-400" />
-                  <input type="text" value={docNombre} onChange={e => setDocNombre(e.target.value)}
-                    placeholder="Nombre del docente"
-                    className="border border-gray-200 rounded-lg p-2 text-sm text-gray-900 outline-none focus:border-blue-400" />
-                  <input type="text" value={docGrado} onChange={e => setDocGrado(e.target.value)}
-                    placeholder="Grado (ej: 7, 10, transicion)"
-                    className="border border-gray-200 rounded-lg p-2 text-sm text-gray-900 outline-none focus:border-blue-400" />
-                  <input type="text" value={docMateria} onChange={e => setDocMateria(e.target.value)}
-                    placeholder="Materia (ej: Matemáticas)"
-                    className="col-span-2 border border-gray-200 rounded-lg p-2 text-sm text-gray-900 outline-none focus:border-blue-400" />
-                </div>
-                {docError && <p className="text-red-500 text-xs mb-2">{docError}</p>}
-                <button onClick={addDocente} disabled={addingDoc}
-                  className="bg-blue-700 hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold disabled:opacity-50 transition">
-                  {addingDoc ? 'Guardando...' : '+ Agregar asignación'}
-                </button>
-              </div>
 
+              {/* Botón / formulario nuevo docente */}
+              {!showNewDoc ? (
+                <button
+                  onClick={() => { setShowNewDoc(true); setCreateDocError('') }}
+                  className="w-full bg-blue-700 hover:bg-blue-600 text-white py-2.5 rounded-xl text-sm font-semibold mb-4 transition">
+                  + Nuevo docente
+                </button>
+              ) : (
+                <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-4">
+                  <div className="flex justify-between items-center mb-3">
+                    <p className="text-sm font-bold text-blue-900">Nuevo docente</p>
+                    <button onClick={() => setShowNewDoc(false)} className="text-gray-400 hover:text-gray-600 text-xl leading-none">×</button>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 mb-2">
+                    <input type="text" value={newDocNombre} onChange={e => setNewDocNombre(e.target.value)}
+                      placeholder="Nombre completo"
+                      className="col-span-2 border border-blue-200 rounded-lg p-2 text-sm text-gray-900 outline-none focus:border-blue-600" />
+                    <input type="email" value={newDocEmail} onChange={e => setNewDocEmail(e.target.value)}
+                      placeholder="correo@colegiolondres.edu.co"
+                      className="col-span-2 border border-blue-200 rounded-lg p-2 text-sm text-gray-900 outline-none focus:border-blue-600" />
+                    <input type="text" value={newDocGrado} onChange={e => setNewDocGrado(e.target.value)}
+                      placeholder="Grado inicial (ej: 7, transicion)"
+                      className="border border-blue-200 rounded-lg p-2 text-sm text-gray-900 outline-none focus:border-blue-600" />
+                    <input type="text" value={newDocMateria} onChange={e => setNewDocMateria(e.target.value)}
+                      placeholder="Materia inicial"
+                      className="border border-blue-200 rounded-lg p-2 text-sm text-gray-900 outline-none focus:border-blue-600" />
+                  </div>
+                  <p className="text-xs text-gray-500 mb-2">Puedes agregar más asignaciones después de crear el docente.</p>
+                  {createDocError && <p className="text-red-500 text-xs mb-2">{createDocError}</p>}
+                  <div className="flex gap-2">
+                    <button onClick={createNewDoc} disabled={creatingDoc}
+                      className="bg-blue-800 hover:bg-blue-700 text-white px-5 py-2 rounded-lg text-sm font-semibold disabled:opacity-50 transition">
+                      {creatingDoc ? 'Creando...' : 'Crear docente'}
+                    </button>
+                    <button onClick={() => setShowNewDoc(false)}
+                      className="px-4 py-2 text-sm text-gray-500 hover:text-gray-700 font-medium">
+                      Cancelar
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Buscador */}
               <input type="text" value={docFilter} onChange={e => setDocFilter(e.target.value)}
-                placeholder="Buscar docente, correo o materia..."
+                placeholder="Buscar por nombre, correo o materia..."
                 className="w-full border border-gray-200 rounded-lg p-2.5 text-sm text-gray-900 mb-3 outline-none" />
 
+              {/* Lista */}
               {loadingDoc ? (
-                <div className="text-center py-8 text-gray-400 text-sm">Cargando...</div>
+                <div className="text-center py-8 text-gray-400 text-sm">Cargando docentes...</div>
               ) : (
                 <div className="space-y-2">
+                  {filteredGroups.length === 0 && docentes.length === 0 && (
+                    <p className="text-center py-6 text-gray-400 text-sm">No hay docentes. Agrega uno con el botón de arriba.</p>
+                  )}
+
                   {filteredGroups.map(g => (
                     <div key={g.email} className="border border-gray-200 rounded-xl overflow-hidden">
+
+                      {/* Cabecera del docente */}
                       <div
-                        onClick={() => setExpandedDoc(expandedDoc === g.email ? null : g.email)}
-                        className="flex items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 cursor-pointer">
+                        onClick={() => openTeacher(g.email, g.nombre)}
+                        className="flex items-center justify-between px-4 py-3 bg-gray-50 hover:bg-gray-100 cursor-pointer select-none">
                         <div>
                           <p className="font-semibold text-gray-800 text-sm">{g.nombre}</p>
                           <p className="text-xs text-gray-400">{g.email}</p>
                         </div>
                         <div className="flex items-center gap-2">
                           <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">
-                            {g.rows.length} asignación(es)
+                            {g.rows.length} asignación{g.rows.length !== 1 ? 'es' : ''}
                           </span>
                           <span className="text-gray-400 text-xs">{expandedDoc === g.email ? '▲' : '▼'}</span>
                         </div>
                       </div>
+
+                      {/* Panel expandido */}
                       {expandedDoc === g.email && (
-                        <div className="divide-y divide-gray-100">
-                          {g.rows.map((row: any) => (
-                            <div key={row.id} className="flex items-center justify-between px-4 py-2">
-                              <div className="flex items-center gap-2 text-sm">
-                                <span className="bg-gray-100 text-gray-700 px-2 py-0.5 rounded-full text-xs font-medium">{row.grado}</span>
-                                <span className="text-gray-700">{row.materia}</span>
+                        <div className="p-4 space-y-4 border-t border-gray-100">
+
+                          {/* Editar nombre y correo */}
+                          <div className="bg-blue-50 rounded-xl p-3">
+                            <p className="text-xs font-bold text-blue-800 mb-2">Datos del docente</p>
+                            <div className="grid grid-cols-2 gap-2 mb-2">
+                              <div>
+                                <label className="text-xs text-gray-500 mb-1 block">Nombre</label>
+                                <input type="text" value={editNombre} onChange={e => setEditNombre(e.target.value)}
+                                  className="w-full border border-blue-200 rounded-lg p-2 text-sm text-gray-900 outline-none focus:border-blue-500" />
                               </div>
-                              <button onClick={() => deleteDocente(row.id)} className="text-red-500 hover:text-red-700 text-xs font-medium">Eliminar</button>
+                              <div>
+                                <label className="text-xs text-gray-500 mb-1 block">Correo (para iniciar sesión)</label>
+                                <input type="email" value={editEmail} onChange={e => setEditEmail(e.target.value)}
+                                  className="w-full border border-blue-200 rounded-lg p-2 text-sm text-gray-900 outline-none focus:border-blue-500" />
+                              </div>
                             </div>
-                          ))}
+                            {editEmail !== g.email && (
+                              <p className="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-lg px-2 py-1 mb-2">
+                                ⚠️ El correo cambiará en todas las asignaciones. El docente deberá usar el nuevo correo para entrar.
+                              </p>
+                            )}
+                            {editError && <p className="text-red-500 text-xs mb-2">{editError}</p>}
+                            <div className="flex items-center gap-3">
+                              <button onClick={() => saveDocEdit(g.email)} disabled={editSaving}
+                                className="bg-blue-700 hover:bg-blue-600 text-white px-4 py-1.5 rounded-lg text-xs font-semibold disabled:opacity-50 transition">
+                                {editSaving ? 'Guardando...' : '✓ Guardar cambios'}
+                              </button>
+                              {editSaved && <span className="text-green-600 text-xs font-medium">✅ Guardado</span>}
+                            </div>
+                          </div>
+
+                          {/* Carga académica */}
+                          <div>
+                            <p className="text-xs font-bold text-gray-600 mb-2">Carga académica</p>
+                            <div className="space-y-1 mb-3">
+                              {g.rows.sort((a: any, b: any) => String(a.grado).localeCompare(String(b.grado))).map((row: any) => (
+                                <div key={row.id} className="flex items-center justify-between bg-gray-50 rounded-lg px-3 py-2">
+                                  <div className="flex items-center gap-2">
+                                    <span className="bg-gray-200 text-gray-700 px-2 py-0.5 rounded-full text-xs font-semibold min-w-[2.5rem] text-center">{row.grado}</span>
+                                    <span className="text-sm text-gray-700">{row.materia}</span>
+                                  </div>
+                                  <button onClick={() => deleteDocente(row.id)}
+                                    className="text-red-400 hover:text-red-600 text-lg font-bold leading-none w-6 h-6 flex items-center justify-center rounded hover:bg-red-50 transition">
+                                    ×
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+
+                            {/* Agregar asignación */}
+                            <div className="bg-green-50 border border-green-200 rounded-xl p-3">
+                              <p className="text-xs font-bold text-green-800 mb-2">+ Agregar asignación</p>
+                              <div className="grid grid-cols-2 gap-2 mb-2">
+                                <input type="text" value={addAssGrado} onChange={e => setAddAssGrado(e.target.value)}
+                                  placeholder="Grado (ej: 7, transicion)"
+                                  className="border border-green-200 rounded-lg p-2 text-xs text-gray-900 outline-none focus:border-green-500" />
+                                <input type="text" value={addAssMateria} onChange={e => setAddAssMateria(e.target.value)}
+                                  placeholder="Materia (ej: Matemáticas)"
+                                  className="border border-green-200 rounded-lg p-2 text-xs text-gray-900 outline-none focus:border-green-500" />
+                              </div>
+                              {addAssError && <p className="text-red-500 text-xs mb-2">{addAssError}</p>}
+                              <button onClick={() => addAssignment(g.email, g.nombre)} disabled={addingAss}
+                                className="bg-green-700 hover:bg-green-600 text-white px-4 py-1.5 rounded-lg text-xs font-semibold disabled:opacity-50 transition">
+                                {addingAss ? 'Guardando...' : '+ Agregar'}
+                              </button>
+                            </div>
+                          </div>
+
                         </div>
                       )}
                     </div>
                   ))}
-                  {docentes.length === 0 && !loadingDoc && (
-                    <div className="text-center py-6 text-gray-400 text-sm">
-                      <p className="mb-2">Cargando docentes registrados...</p>
-                    </div>
-                  )}
-                  <button onClick={loadDocentes} className="w-full text-xs text-gray-400 hover:text-gray-600 py-2 text-center">↻ Recargar lista</button>
+
+                  <button onClick={loadDocentes} className="w-full text-xs text-gray-400 hover:text-gray-600 py-2 text-center transition">
+                    ↻ Recargar lista
+                  </button>
                 </div>
               )}
             </div>

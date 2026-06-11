@@ -64,14 +64,23 @@ export async function POST(request: Request) {
 }
 
 export async function PUT(request: Request) {
-  const { email, nombre } = await request.json()
-  if (!email || !nombre) {
-    return NextResponse.json({ success: false, error: 'Faltan parámetros' }, { status: 400 })
+  const { email, nombre, newEmail } = await request.json()
+  if (!email) return NextResponse.json({ success: false, error: 'Email requerido' }, { status: 400 })
+
+  const cleanEmail = email.toLowerCase().trim()
+  const updates: Record<string, string> = {}
+  if (nombre !== undefined && nombre !== null) updates.nombre = String(nombre).trim()
+  if (newEmail) {
+    const cleanNew = newEmail.toLowerCase().trim()
+    if (cleanNew !== cleanEmail) updates.email = cleanNew
   }
+
+  if (Object.keys(updates).length === 0) return NextResponse.json({ success: true })
+
   const { error } = await supabase
     .from('docentes')
-    .update({ nombre: nombre.trim() })
-    .eq('email', email.toLowerCase().trim())
+    .update(updates)
+    .eq('email', cleanEmail)
 
   if (error) return NextResponse.json({ success: false, error: error.message })
   return NextResponse.json({ success: true })
