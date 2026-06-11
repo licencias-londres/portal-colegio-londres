@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
-import { TEACHER_DATA, GRADE_NAMES, normalizeGrade, getFormType } from '@/lib/teacher-data'
+import { GRADE_NAMES, normalizeGrade, getFormType } from '@/lib/teacher-data'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -19,27 +19,22 @@ export async function GET(request: Request) {
 
   const emailLower = email.toLowerCase().trim()
 
-  // Obtener asignaciones desde BD; fallback a datos estáticos
-  let teacherInfo = TEACHER_DATA[emailLower]
-
   const { data: dbRows } = await supabase
     .from('docentes')
     .select('nombre, grado, materia')
     .eq('email', emailLower)
     .eq('activo', true)
 
-  if (dbRows && dbRows.length > 0) {
-    const materias: Record<string, string[]> = {}
-    for (const row of dbRows) {
-      if (!materias[row.grado]) materias[row.grado] = []
-      if (!materias[row.grado].includes(row.materia)) materias[row.grado].push(row.materia)
-    }
-    teacherInfo = { nombre: dbRows[0].nombre, materias }
-  }
-
-  if (!teacherInfo) {
+  if (!dbRows || dbRows.length === 0) {
     return NextResponse.json({ success: false, error: 'Docente no encontrado' }, { status: 404 })
   }
+
+  const materias: Record<string, string[]> = {}
+  for (const row of dbRows) {
+    if (!materias[row.grado]) materias[row.grado] = []
+    if (!materias[row.grado].includes(row.materia)) materias[row.grado].push(row.materia)
+  }
+  const teacherInfo = { nombre: dbRows[0].nombre, materias }
 
   // Cargar todos los estudiantes una vez
   const { data: allStudents } = await supabase

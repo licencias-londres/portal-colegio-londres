@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
-import { TEACHER_DATA, normalizeGrade, getFormType, GRADE_NAMES, SUPER_ADMINS } from '@/lib/teacher-data'
+import { normalizeGrade, getFormType, GRADE_NAMES, SUPER_ADMINS } from '@/lib/teacher-data'
 import { sendReminderEmail, sendPlatformNotifEmail } from '@/lib/email'
 
 const supabase = createClient(
@@ -8,12 +8,33 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 )
 
+async function getTeacherMap() {
+  const { data: rows } = await supabase
+    .from('docentes')
+    .select('email, nombre, grado, materia')
+    .eq('activo', true)
+    .order('nombre')
+
+  const map: Record<string, { nombre: string; materias: Record<string, string[]> }> = {}
+  for (const row of (rows || [])) {
+    if (SUPER_ADMINS.includes(row.email)) continue
+    if (!map[row.email]) map[row.email] = { nombre: row.nombre, materias: {} }
+    if (!map[row.email].materias[row.grado]) map[row.email].materias[row.grado] = []
+    if (!map[row.email].materias[row.grado].includes(row.materia)) {
+      map[row.email].materias[row.grado].push(row.materia)
+    }
+  }
+  return map
+}
+
 export async function POST(request: Request) {
   const body = await request.json()
   const { action, periodo, anio } = body
 
   // — Notificar a todos los estudiantes pendientes —
   if (action === 'notifyPending') {
+    const teacherMap = await getTeacherMap()
+
     const { data: allStudents } = await supabase.from('estudiantes').select('nombre, email, grado')
     const { data: bachResp } = await supabase.from('respuestas_bachillerato')
       .select('correo, materia, grado').eq('periodo', periodo).eq('anio', anio)
@@ -25,13 +46,11 @@ export async function POST(request: Request) {
     let sent = 0
     const errors: string[] = []
 
-    // Para cada docente, por cada grupo, enviar a pendientes
-    for (const [tEmail, info] of Object.entries(TEACHER_DATA)) {
-      if (SUPER_ADMINS.includes(tEmail)) continue
+    for (const [, info] of Object.entries(teacherMap)) {
       for (const [grade, materias] of Object.entries(info.materias)) {
-        const gradeNorm  = normalizeGrade(grade)
-        const formType   = getFormType(gradeNorm)
-        const gradeLabel = GRADE_NAMES[gradeNorm] || grade
+        const gradeNorm     = normalizeGrade(grade)
+        const formType      = getFormType(gradeNorm)
+        const gradeLabel    = GRADE_NAMES[gradeNorm] || grade
         const gradeStudents = normalizedStudents.filter(s => s.gradeNorm === gradeNorm)
 
         for (const materia of materias) {
@@ -67,10 +86,11 @@ export async function POST(request: Request) {
   // — Notificar apertura/cierre a todos los docentes —
   if (action === 'notifyPlatform') {
     const { platformAction } = body
+    const teacherMap = await getTeacherMap()
     let sent = 0
     const errors: string[] = []
-    for (const [tEmail, info] of Object.entries(TEACHER_DATA)) {
-      if (SUPER_ADMINS.includes(tEmail)) continue
+
+    for (const [tEmail, info] of Object.entries(teacherMap)) {
       try {
         await sendPlatformNotifEmail(tEmail, info.nombre, platformAction, periodo, anio)
         sent++

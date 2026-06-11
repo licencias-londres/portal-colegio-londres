@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
-import { TEACHER_DATA, SUPER_ADMINS } from '@/lib/teacher-data'
+import { SUPER_ADMINS } from '@/lib/teacher-data'
 import { sendOtpEmail } from '@/lib/email'
 
 const supabase = createClient(
@@ -32,13 +32,13 @@ export async function POST(request: Request) {
     .maybeSingle()
 
   const isSuperAdmin = SUPER_ADMINS.includes(emailLower)
-  const isTeacher    = !!dbDoc || !!TEACHER_DATA[emailLower]
+  const isTeacher    = !!dbDoc
 
   if (!isTeacher && !isSuperAdmin) {
     return NextResponse.json({ success: false, error: 'No estás registrado como docente.' })
   }
 
-  const teacherName = dbDoc?.nombre || TEACHER_DATA[emailLower]?.nombre || 'Docente'
+  const teacherName = dbDoc?.nombre || 'Docente'
 
   // — VALIDAR CORREO (sin enviar código — usado por login con contraseña) —
   if (action === 'checkEmail') {

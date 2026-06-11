@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
-import { TEACHER_DATA, GRADE_NAMES, normalizeGrade, getFormType, SUPER_ADMINS } from '@/lib/teacher-data'
+import { GRADE_NAMES, normalizeGrade, getFormType, SUPER_ADMINS } from '@/lib/teacher-data'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -11,6 +11,24 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
   const periodo = searchParams.get('periodo') || ''
   const anio    = searchParams.get('anio') || ''
+
+  // Cargar docentes desde BD
+  const { data: docentesRows } = await supabase
+    .from('docentes')
+    .select('email, nombre, grado, materia')
+    .eq('activo', true)
+    .order('nombre')
+
+  // Agrupar por email
+  const teacherMap: Record<string, { nombre: string; materias: Record<string, string[]> }> = {}
+  for (const row of (docentesRows || [])) {
+    if (SUPER_ADMINS.includes(row.email)) continue
+    if (!teacherMap[row.email]) teacherMap[row.email] = { nombre: row.nombre, materias: {} }
+    if (!teacherMap[row.email].materias[row.grado]) teacherMap[row.email].materias[row.grado] = []
+    if (!teacherMap[row.email].materias[row.grado].includes(row.materia)) {
+      teacherMap[row.email].materias[row.grado].push(row.materia)
+    }
+  }
 
   const { data: allStudents } = await supabase
     .from('estudiantes').select('nombre, email, grado')
@@ -32,17 +50,17 @@ export async function GET(request: Request) {
   let totalSubmitted = 0
   let totalPending   = 0
 
-  for (const [email, info] of Object.entries(TEACHER_DATA)) {
-    if (SUPER_ADMINS.includes(email) && !info.materias || Object.keys(info.materias).length === 0) continue
+  for (const [email, info] of Object.entries(teacherMap)) {
+    if (Object.keys(info.materias).length === 0) continue
 
     const tGroups: any[] = []
     let teacherSubmitted = 0
     let teacherTotal     = 0
 
     for (const [grade, materias] of Object.entries(info.materias)) {
-      const gradeNorm  = normalizeGrade(grade)
-      const formType   = getFormType(gradeNorm)
-      const gradeLabel = GRADE_NAMES[gradeNorm] || grade
+      const gradeNorm     = normalizeGrade(grade)
+      const formType      = getFormType(gradeNorm)
+      const gradeLabel    = GRADE_NAMES[gradeNorm] || grade
       const gradeStudents = normalizedStudents.filter(s => s.gradeNorm === gradeNorm)
 
       if (formType === 'none') {
