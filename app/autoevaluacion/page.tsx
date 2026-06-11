@@ -53,6 +53,7 @@ export default function AutoevaluacionPage() {
   const [bachCi2j, setBachCi2j] = useState<Record<string, string>>({})
   const [submitting, setSubmitting] = useState(false)
   const [draftBanner, setDraftBanner] = useState(false)
+  const [globalSubmitted, setGlobalSubmitted] = useState(false)
   const _draftRef = useRef(false)
 
   useEffect(() => {
@@ -113,7 +114,7 @@ export default function AutoevaluacionPage() {
     const gn   = normalizeGrade(gradeKey)
     const type = getFormType(gn)
 
-    // Intentar recuperar borrador guardado
+    // 1. Recuperar borrador local
     let draft: any = null
     try {
       const raw = localStorage.getItem(DRAFT_KEY)
@@ -127,29 +128,56 @@ export default function AutoevaluacionPage() {
       const mats = MATERIAS_BACHILLERATO[gn] || []
       setMaterias(mats)
 
-      if (draft) {
-        setBachValues(draft.bachValues || {})
-        setBachReflexion(draft.bachReflexion || {})
-        setBachSubmitted(draft.bachSubmitted || {})
-        setBachCi1(draft.bachCi1 || {})
-        setBachCi2(draft.bachCi2 || {})
-        setBachCi1j(draft.bachCi1j || {})
-        setBachCi2j(draft.bachCi2j || {})
-        setCurrentMateriaIdx(draft.currentMateriaIdx || 0)
-        setDraftBanner(true)
-        setTimeout(() => setDraftBanner(false), 5000)
-      } else {
-        const init: Record<string, Record<string, number | null>> = {}
-        const c1: Record<string, number|null> = {}; const c2: Record<string, number|null> = {}
-        const c1j: Record<string, string> = {}; const c2j: Record<string, string> = {}
-        mats.forEach(m => {
-          init[m] = {}; CRITERIOS.forEach(c => { init[m][c.id] = null })
-          c1[m] = null; c2[m] = null; c1j[m] = ''; c2j[m] = ''
-        })
-        setBachValues(init); setBachReflexion({}); setBachSubmitted({})
-        setBachCi1(c1); setBachCi2(c2); setBachCi1j(c1j); setBachCi2j(c2j)
-        setCurrentMateriaIdx(0)
+      // Estado base vacío
+      const init: Record<string, Record<string, number | null>> = {}
+      const c1: Record<string, number|null> = {}; const c2: Record<string, number|null> = {}
+      const c1j: Record<string, string> = {}; const c2j: Record<string, string> = {}
+      mats.forEach(m => {
+        init[m] = {}; CRITERIOS.forEach(c => { init[m][c.id] = null })
+        c1[m] = null; c2[m] = null; c1j[m] = ''; c2j[m] = ''
+      })
+      let newBachValues   = draft?.bachValues   || init
+      let newBachReflexion = draft?.bachReflexion || {}
+      let newBachSubmitted = draft?.bachSubmitted || {}
+      let newBachCi1  = draft?.bachCi1  || c1
+      let newBachCi2  = draft?.bachCi2  || c2
+      let newBachCi1j = draft?.bachCi1j || c1j
+      let newBachCi2j = draft?.bachCi2j || c2j
+      let newMateriaIdx = draft?.currentMateriaIdx || 0
+
+      // 2. Consultar BD — sobreescribe el borrador con datos confirmados
+      if (config) {
+        try {
+          const params = new URLSearchParams({ tipo: 'bachillerato', correo: emailStr.toLowerCase(), grado: gn, periodo: config.periodo, anio: config.anio })
+          const r = await fetch(`/api/student/responses?${params}`)
+          const d = await r.json()
+          if (d.success && d.submitted) {
+            for (const [mat, row] of Object.entries(d.submitted as Record<string, any>)) {
+              newBachValues[mat] = { c1: row.c1, c2: row.c2, c3: row.c3, c4: row.c4,
+                c5: row.c5, c6: row.c6, c7: row.c7, c8: row.c8,
+                c9: row.c9, c10: row.c10, c11: row.c11, c12: row.c12 }
+              newBachReflexion[mat] = row.reflexion || ''
+              newBachSubmitted[mat] = true
+              if (row.ci1  != null) newBachCi1[mat]  = row.ci1
+              if (row.ci1j != null) newBachCi1j[mat] = row.ci1j
+              if (row.ci2  != null) newBachCi2[mat]  = row.ci2
+              if (row.ci2j != null) newBachCi2j[mat] = row.ci2j
+            }
+            // Navegar a la primera materia pendiente
+            const firstPending = mats.findIndex(m => !newBachSubmitted[m])
+            if (firstPending >= 0) newMateriaIdx = firstPending
+          }
+        } catch { /**/ }
       }
+
+      setBachValues(newBachValues); setBachReflexion(newBachReflexion)
+      setBachSubmitted(newBachSubmitted)
+      setBachCi1(newBachCi1); setBachCi2(newBachCi2)
+      setBachCi1j(newBachCi1j); setBachCi2j(newBachCi2j)
+      setCurrentMateriaIdx(newMateriaIdx)
+
+      const anySubmitted = Object.values(newBachSubmitted).some(Boolean)
+      if (anySubmitted || draft) { setDraftBanner(true); setTimeout(() => setDraftBanner(false), 5000) }
 
       if (config) {
         try {
@@ -161,16 +189,34 @@ export default function AutoevaluacionPage() {
     }
 
     if (type === 'global') {
-      if (draft) {
-        setGlobalValues(draft.globalValues || { participacion: null, puntualidad: null, cumplimiento: null, autonomia: null, atencion: null })
-        setGlobalReflexion(draft.globalReflexion || '')
-        setGlobalCompromiso(draft.globalCompromiso || '')
-        setDraftBanner(true)
-        setTimeout(() => setDraftBanner(false), 5000)
-      } else {
-        setGlobalValues({ participacion: null, puntualidad: null, cumplimiento: null, autonomia: null, atencion: null })
-        setGlobalReflexion(''); setGlobalCompromiso('')
+      // Estado base desde borrador
+      let newGlobalValues = draft?.globalValues || { participacion: null, puntualidad: null, cumplimiento: null, autonomia: null, atencion: null }
+      let newReflexion    = draft?.globalReflexion  || ''
+      let newCompromiso   = draft?.globalCompromiso  || ''
+      let alreadySubmitted = false
+
+      // 2. Consultar BD
+      if (config) {
+        try {
+          const params = new URLSearchParams({ tipo: 'global', nombre, grado: gn, periodo: config.periodo, anio: config.anio })
+          const r = await fetch(`/api/student/responses?${params}`)
+          const d = await r.json()
+          if (d.success && d.submitted) {
+            const s = d.submitted
+            newGlobalValues = { participacion: s.participacion, puntualidad: s.puntualidad,
+              cumplimiento: s.cumplimiento, autonomia: s.autonomia, atencion: s.atencion }
+            newReflexion   = s.reflexion  || ''
+            newCompromiso  = s.compromiso || ''
+            alreadySubmitted = true
+          }
+        } catch { /**/ }
       }
+
+      setGlobalValues(newGlobalValues)
+      setGlobalReflexion(newReflexion)
+      setGlobalCompromiso(newCompromiso)
+      setGlobalSubmitted(alreadySubmitted)
+      if (alreadySubmitted || draft) { setDraftBanner(true); setTimeout(() => setDraftBanner(false), 5000) }
     }
 
     setScreen('form'); window.scrollTo(0, 0)
@@ -319,10 +365,14 @@ export default function AutoevaluacionPage() {
         <button onClick={() => setScreen('login')} className="text-sm bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg">Salir</button>
       </header>
 
-      {/* Banner: borrador recuperado */}
+      {/* Banner: borrador o respuestas previas recuperadas */}
       {draftBanner && (
-        <div className="bg-green-600 text-white text-sm font-semibold px-4 py-3 flex items-center justify-between">
-          <span>✅ Borrador recuperado — continuando desde donde lo dejaste.</span>
+        <div className={`text-white text-sm font-semibold px-4 py-3 flex items-center justify-between ${globalSubmitted ? 'bg-blue-700' : 'bg-green-600'}`}>
+          <span>
+            {globalSubmitted
+              ? '🔒 Ya enviaste esta autoevaluación. Puedes consultarla pero no modificarla.'
+              : '✅ Progreso recuperado — continuando desde donde lo dejaste.'}
+          </span>
           <button onClick={() => setDraftBanner(false)} className="ml-4 text-white/70 hover:text-white font-bold text-lg leading-none">✕</button>
         </div>
       )}
@@ -340,7 +390,10 @@ export default function AutoevaluacionPage() {
         {ft === 'global' && (
           <div className="bg-white rounded-2xl shadow p-6">
             <h2 className="font-bold text-blue-900 text-lg mb-4">Autoevaluación — {GRADE_NAMES[gn]}</h2>
-            <p className="text-sm text-gray-500 mb-6 bg-blue-50 p-3 rounded-lg">Responde de acuerdo a tu proceso y compromiso durante este periodo. Las notas deben estar entre 1 y 5.</p>
+            {globalSubmitted
+              ? <div className="bg-blue-50 border border-blue-200 text-blue-800 text-sm rounded-lg p-3 mb-6">🔒 Ya enviaste tu autoevaluación este periodo. Aquí puedes consultar tus respuestas.</div>
+              : <p className="text-sm text-gray-500 mb-6 bg-blue-50 p-3 rounded-lg">Responde de acuerdo a tu proceso y compromiso durante este periodo. Las notas deben estar entre 1 y 5.</p>
+            }
             {[
               { id: 'participacion', label: 'Mi participación en las clases puede ser valorada en:' },
               { id: 'puntualidad',   label: 'La puntualidad para asistir y permanecer en las clases puede ser valorada en:' },
@@ -352,8 +405,13 @@ export default function AutoevaluacionPage() {
                 <label className="block text-sm font-semibold text-blue-900 mb-2">{c.label}</label>
                 <div className="flex gap-2">
                   {[1,2,3,4,5].map(n => (
-                    <button key={n} onClick={() => setGlobalValues(p => ({ ...p, [c.id]: n }))}
-                      className={`w-11 h-11 rounded-full border-2 font-bold text-sm transition-all ${globalValues[c.id]===n?'bg-blue-900 border-blue-900 text-white':'border-blue-900 text-blue-900 hover:bg-blue-50'}`}>
+                    <button key={n}
+                      onClick={() => !globalSubmitted && setGlobalValues(p => ({ ...p, [c.id]: n }))}
+                      disabled={globalSubmitted}
+                      className={`w-11 h-11 rounded-full border-2 font-bold text-sm transition-all
+                        ${globalValues[c.id]===n
+                          ? globalSubmitted ? 'bg-blue-700 border-blue-700 text-white' : 'bg-blue-900 border-blue-900 text-white'
+                          : globalSubmitted ? 'border-gray-300 text-gray-300 cursor-default' : 'border-blue-900 text-blue-900 hover:bg-blue-50'}`}>
                       {n}
                     </button>
                   ))}
@@ -366,18 +424,28 @@ export default function AutoevaluacionPage() {
             </div>
             <div className="mb-4">
               <label className="block text-sm font-semibold text-blue-900 mb-2">Reflexión y justificación de la nota:</label>
-              <textarea value={globalReflexion} onChange={e => setGlobalReflexion(e.target.value)} rows={3}
-                className="w-full border-2 border-gray-200 rounded-lg p-3 text-sm text-gray-900 focus:border-blue-900 outline-none" placeholder="Escribe aquí..." />
+              <textarea value={globalReflexion} onChange={e => !globalSubmitted && setGlobalReflexion(e.target.value)}
+                readOnly={globalSubmitted} rows={3}
+                className={`w-full border-2 rounded-lg p-3 text-sm text-gray-900 outline-none ${globalSubmitted ? 'border-gray-100 bg-gray-50 cursor-default' : 'border-gray-200 focus:border-blue-900'}`}
+                placeholder="Escribe aquí..." />
             </div>
             <div className="mb-6">
               <label className="block text-sm font-semibold text-blue-900 mb-2">Mi compromiso para el próximo período es:</label>
-              <textarea value={globalCompromiso} onChange={e => setGlobalCompromiso(e.target.value)} rows={3}
-                className="w-full border-2 border-gray-200 rounded-lg p-3 text-sm text-gray-900 focus:border-blue-900 outline-none" placeholder="Escribe aquí..." />
+              <textarea value={globalCompromiso} onChange={e => !globalSubmitted && setGlobalCompromiso(e.target.value)}
+                readOnly={globalSubmitted} rows={3}
+                className={`w-full border-2 rounded-lg p-3 text-sm text-gray-900 outline-none ${globalSubmitted ? 'border-gray-100 bg-gray-50 cursor-default' : 'border-gray-200 focus:border-blue-900'}`}
+                placeholder="Escribe aquí..." />
             </div>
-            <button onClick={submitGlobal} disabled={submitting||Object.values(globalValues).some(v=>v===null)||!globalReflexion||!globalCompromiso}
-              className="w-full bg-green-600 text-white py-3 rounded-lg font-bold disabled:opacity-50 hover:bg-green-700">
-              {submitting ? 'Enviando...' : '✅ Enviar autoevaluación'}
-            </button>
+            {globalSubmitted ? (
+              <div className="bg-green-50 border border-green-300 rounded-xl p-4 text-center text-green-700 font-semibold text-sm">
+                ✅ Autoevaluación enviada correctamente este periodo
+              </div>
+            ) : (
+              <button onClick={submitGlobal} disabled={submitting||Object.values(globalValues).some(v=>v===null)||!globalReflexion||!globalCompromiso}
+                className="w-full bg-green-600 text-white py-3 rounded-lg font-bold disabled:opacity-50 hover:bg-green-700">
+                {submitting ? 'Enviando...' : '✅ Enviar autoevaluación'}
+              </button>
+            )}
           </div>
         )}
 
