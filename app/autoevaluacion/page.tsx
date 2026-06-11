@@ -54,6 +54,7 @@ export default function AutoevaluacionPage() {
   const [submitting, setSubmitting] = useState(false)
   const [draftBanner, setDraftBanner] = useState(false)
   const [globalSubmitted, setGlobalSubmitted] = useState(false)
+  const [otroText, setOtroText] = useState<Record<string, string>>({})
   const _draftRef = useRef(false)
 
   useEffect(() => {
@@ -256,6 +257,25 @@ export default function AutoevaluacionPage() {
 
   function handleFinish() { localStorage.removeItem(DRAFT_KEY); setScreen('success') }
 
+  function openOtro(key: string, curVal: number | null) {
+    const pre = (curVal !== null && ![1,2,3,4,5].includes(curVal)) ? String(curVal) : ''
+    setOtroText(p => ({ ...p, [key]: pre }))
+  }
+  function closeOtro(key: string) {
+    setOtroText(p => { const n = {...p}; delete n[key]; return n })
+  }
+  function handleOtroInput(key: string, raw: string, setValue: (v: number | null) => void) {
+    let cleaned = raw.replace(/[^0-9.]/g, '')
+    const dot = cleaned.indexOf('.')
+    if (dot !== -1) cleaned = cleaned.slice(0, dot + 1) + cleaned.slice(dot + 1).replace(/\./g, '')
+    if (dot !== -1 && cleaned.length > dot + 2) cleaned = cleaned.slice(0, dot + 2)
+    const num = parseFloat(cleaned)
+    if (!isNaN(num) && num > 5) { cleaned = '5.0'; setValue(5.0) }
+    else if (!isNaN(num) && num > 0) setValue(num)
+    else setValue(null)
+    setOtroText(p => ({ ...p, [key]: cleaned }))
+  }
+
   const gn    = normalizeGrade(currentGrade)
   const ft    = getFormType(gn)
   const lgn   = normalizeGrade(grade)
@@ -400,24 +420,43 @@ export default function AutoevaluacionPage() {
               { id: 'cumplimiento',  label: 'Mi cumplimiento con las actividades, tareas y trabajos puede ser valorado en:' },
               { id: 'autonomia',     label: 'Mi autonomía para realizar las actividades propuestas puede ser valorada en:' },
               { id: 'atencion',      label: 'Mi atención, esfuerzo y respeto al docente puede ser valorado en:' }
-            ].map(c => (
-              <div key={c.id} className="mb-5">
-                <label className="block text-sm font-semibold text-blue-900 mb-2">{c.label}</label>
-                <div className="flex gap-2">
-                  {[1,2,3,4,5].map(n => (
-                    <button key={n}
-                      onClick={() => !globalSubmitted && setGlobalValues(p => ({ ...p, [c.id]: n }))}
-                      disabled={globalSubmitted}
-                      className={`w-11 h-11 rounded-full border-2 font-bold text-sm transition-all
-                        ${globalValues[c.id]===n
-                          ? globalSubmitted ? 'bg-blue-700 border-blue-700 text-white' : 'bg-blue-900 border-blue-900 text-white'
-                          : globalSubmitted ? 'border-gray-300 text-gray-300 cursor-default' : 'border-blue-900 text-blue-900 hover:bg-blue-50'}`}>
-                      {n}
-                    </button>
-                  ))}
+            ].map(c => {
+              const key = `global-${c.id}`
+              const curVal = globalValues[c.id] ?? null
+              const otroOpen = !globalSubmitted && (key in otroText || (curVal !== null && ![1,2,3,4,5].includes(curVal)))
+              return (
+                <div key={c.id} className="mb-5">
+                  <label className="block text-sm font-semibold text-blue-900 mb-2">{c.label}</label>
+                  <div className="flex gap-2 flex-wrap items-center">
+                    {[1,2,3,4,5].map(n => (
+                      <button key={n} disabled={globalSubmitted}
+                        onClick={() => { setGlobalValues(p => ({ ...p, [c.id]: n })); closeOtro(key) }}
+                        className={`w-11 h-11 rounded-full border-2 font-bold text-sm transition-all
+                          ${curVal===n && !otroOpen
+                            ? globalSubmitted ? 'bg-blue-700 border-blue-700 text-white' : 'bg-blue-900 border-blue-900 text-white'
+                            : globalSubmitted ? 'border-gray-300 text-gray-300 cursor-default' : 'border-blue-900 text-blue-900 hover:bg-blue-50'}`}>
+                        {n}
+                      </button>
+                    ))}
+                    {!globalSubmitted && (
+                      <button
+                        onClick={() => { if(key in otroText){closeOtro(key);setGlobalValues(p=>({...p,[c.id]:null}))}else openOtro(key,curVal) }}
+                        className={`px-3 h-11 rounded-full border-2 font-bold text-sm transition-all
+                          ${key in otroText ? 'bg-amber-500 border-amber-500 text-white' : 'border-amber-500 text-amber-700 hover:bg-amber-50'}`}>
+                        Otro
+                      </button>
+                    )}
+                    {otroOpen && (
+                      <input type="text" inputMode="decimal"
+                        value={key in otroText ? otroText[key] : (curVal!==null?String(curVal):'')}
+                        onChange={e => handleOtroInput(key, e.target.value, v => setGlobalValues(p => ({...p,[c.id]:v})))}
+                        placeholder="0.0"
+                        className="w-16 h-11 border-2 border-amber-400 rounded-lg text-center font-bold text-amber-800 text-sm focus:outline-none focus:border-amber-600" />
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              )
+            })}
             <div className="mb-4 p-4 bg-blue-50 rounded-xl">
               <p className="text-sm font-semibold text-blue-900">Nota final (promedio automático):</p>
               <p className="text-4xl font-black text-blue-900">{calcAvg(['participacion','puntualidad','cumplimiento','autonomia'].map(k => globalValues[k]))}</p>
@@ -538,61 +577,121 @@ export default function AutoevaluacionPage() {
                       )}
                     </div>
 
-                    {CRITERIOS.map((cr, idx) => (
-                      <div key={cr.id} className="mb-6">
-                        <label className="block text-sm font-semibold text-gray-800 mb-2">{idx+1}. {cr.label}</label>
-                        <div className="flex gap-2">
-                          {[1,2,3,4,5].map(n => (
-                            <button key={n} disabled={bachSubmitted[mat]}
-                              onClick={() => setBachValues(p => ({...p,[mat]:{...p[mat],[cr.id]:n}}))}
-                              className={`w-11 h-11 rounded-full border-2 font-bold text-sm transition-all
-                                ${vals[cr.id]===n ? 'bg-blue-900 border-blue-900 text-white shadow-md'
+                    {CRITERIOS.map((cr, idx) => {
+                      const key = `${mat}-${cr.id}`
+                      const curVal = vals[cr.id] ?? null
+                      const otroOpen = key in otroText || (curVal !== null && ![1,2,3,4,5].includes(curVal))
+                      return (
+                        <div key={cr.id} className="mb-6">
+                          <label className="block text-sm font-semibold text-gray-800 mb-2">{idx+1}. {cr.label}</label>
+                          <div className="flex gap-2 flex-wrap items-center">
+                            {[1,2,3,4,5].map(n => (
+                              <button key={n} disabled={bachSubmitted[mat]}
+                                onClick={() => { setBachValues(p => ({...p,[mat]:{...p[mat],[cr.id]:n}})); closeOtro(key) }}
+                                className={`w-11 h-11 rounded-full border-2 font-bold text-sm transition-all
+                                  ${curVal===n && !otroOpen ? 'bg-blue-900 border-blue-900 text-white shadow-md'
+                                  : bachSubmitted[mat] ? 'border-gray-200 text-gray-300 cursor-default'
+                                  : 'border-blue-900 text-blue-900 hover:bg-blue-50'}`}>
+                                {n}
+                              </button>
+                            ))}
+                            <button disabled={bachSubmitted[mat]}
+                              onClick={() => {
+                                if (otroOpen) { closeOtro(key); setBachValues(p => ({...p,[mat]:{...p[mat],[cr.id]:null}})) }
+                                else openOtro(key, curVal)
+                              }}
+                              className={`px-3 h-11 rounded-full border-2 font-bold text-sm transition-all
+                                ${otroOpen ? 'bg-amber-500 border-amber-500 text-white'
                                 : bachSubmitted[mat] ? 'border-gray-200 text-gray-300 cursor-default'
-                                : 'border-blue-900 text-blue-900 hover:bg-blue-50'}`}>
-                              {n}
+                                : 'border-amber-500 text-amber-700 hover:bg-amber-50'}`}>
+                              Otro
                             </button>
-                          ))}
+                            {otroOpen && (
+                              <input type="text" inputMode="decimal"
+                                value={key in otroText ? otroText[key] : (curVal !== null ? String(curVal) : '')}
+                                onChange={e => handleOtroInput(key, e.target.value, v => setBachValues(p => ({...p,[mat]:{...p[mat],[cr.id]:v}})))}
+                                disabled={bachSubmitted[mat]}
+                                placeholder="0.0"
+                                className="w-16 h-11 border-2 border-amber-400 rounded-lg text-center font-bold text-amber-800 text-sm focus:outline-none focus:border-amber-600 disabled:bg-gray-50 disabled:text-gray-400" />
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      )
+                    })}
 
-                    {ci?.item1 && (
-                      <div className="mb-6 bg-amber-50 border-2 border-amber-300 rounded-xl p-4">
-                        <span className="inline-block bg-amber-400 text-white text-xs font-bold px-3 py-1 rounded-full mb-3">✏️ Criterio adicional</span>
-                        <label className="block text-sm font-semibold text-amber-900 mb-2">{CRITERIOS.length+1}. {ci.item1}</label>
-                        <div className="flex gap-2 mb-3">
-                          {[1,2,3,4,5].map(n => (
-                            <button key={n} disabled={bachSubmitted[mat]} onClick={() => setBachCi1(p => ({...p,[mat]:n}))}
-                              className={`w-11 h-11 rounded-full border-2 font-bold text-sm transition-all ${bachCi1[mat]===n?'bg-amber-500 border-amber-500 text-white':'border-amber-500 text-amber-800 hover:bg-amber-100 disabled:opacity-40'}`}>
-                              {n}
+                    {ci?.item1 && (() => {
+                      const key = `${mat}-ci1`
+                      const curVal = bachCi1[mat] ?? null
+                      const otroOpen = key in otroText || (curVal !== null && ![1,2,3,4,5].includes(curVal))
+                      return (
+                        <div className="mb-6 bg-amber-50 border-2 border-amber-300 rounded-xl p-4">
+                          <span className="inline-block bg-amber-400 text-white text-xs font-bold px-3 py-1 rounded-full mb-3">✏️ Criterio adicional</span>
+                          <label className="block text-sm font-semibold text-amber-900 mb-2">{CRITERIOS.length+1}. {ci.item1}</label>
+                          <div className="flex gap-2 flex-wrap items-center mb-3">
+                            {[1,2,3,4,5].map(n => (
+                              <button key={n} disabled={bachSubmitted[mat]}
+                                onClick={() => { setBachCi1(p => ({...p,[mat]:n})); closeOtro(key) }}
+                                className={`w-11 h-11 rounded-full border-2 font-bold text-sm transition-all ${curVal===n&&!otroOpen?'bg-amber-500 border-amber-500 text-white':bachSubmitted[mat]?'border-gray-200 text-gray-300 cursor-default':'border-amber-500 text-amber-800 hover:bg-amber-100'}`}>
+                                {n}
+                              </button>
+                            ))}
+                            <button disabled={bachSubmitted[mat]}
+                              onClick={() => { if(otroOpen){closeOtro(key);setBachCi1(p=>({...p,[mat]:null}))}else openOtro(key,curVal) }}
+                              className={`px-3 h-11 rounded-full border-2 font-bold text-sm transition-all ${otroOpen?'bg-amber-600 border-amber-600 text-white':bachSubmitted[mat]?'border-gray-200 text-gray-300 cursor-default':'border-amber-500 text-amber-700 hover:bg-amber-50'}`}>
+                              Otro
                             </button>
-                          ))}
+                            {otroOpen && (
+                              <input type="text" inputMode="decimal"
+                                value={key in otroText ? otroText[key] : (curVal!==null?String(curVal):'')}
+                                onChange={e => handleOtroInput(key, e.target.value, v => setBachCi1(p => ({...p,[mat]:v})))}
+                                disabled={bachSubmitted[mat]} placeholder="0.0"
+                                className="w-16 h-11 border-2 border-amber-400 rounded-lg text-center font-bold text-amber-800 text-sm focus:outline-none focus:border-amber-600 disabled:bg-gray-50 disabled:text-gray-400" />
+                            )}
+                          </div>
+                          <textarea value={bachCi1j[mat]||''} onChange={e => setBachCi1j(p => ({...p,[mat]:e.target.value}))}
+                            disabled={bachSubmitted[mat]} rows={2}
+                            className="w-full border-2 border-amber-200 rounded-lg p-3 text-sm text-gray-900 focus:border-amber-500 outline-none disabled:bg-gray-50"
+                            placeholder="Justifica tu valoración en este criterio..." />
                         </div>
-                        <textarea value={bachCi1j[mat]||''} onChange={e => setBachCi1j(p => ({...p,[mat]:e.target.value}))}
-                          disabled={bachSubmitted[mat]} rows={2}
-                          className="w-full border-2 border-amber-200 rounded-lg p-3 text-sm text-gray-900 focus:border-amber-500 outline-none disabled:bg-gray-50"
-                          placeholder="Justifica tu valoración en este criterio..." />
-                      </div>
-                    )}
+                      )
+                    })()}
 
-                    {ci?.item2 && (
-                      <div className="mb-6 bg-amber-50 border-2 border-amber-300 rounded-xl p-4">
-                        <span className="inline-block bg-amber-400 text-white text-xs font-bold px-3 py-1 rounded-full mb-3">✏️ Criterio adicional</span>
-                        <label className="block text-sm font-semibold text-amber-900 mb-2">{CRITERIOS.length+(ci.item1?2:1)}. {ci.item2}</label>
-                        <div className="flex gap-2 mb-3">
-                          {[1,2,3,4,5].map(n => (
-                            <button key={n} disabled={bachSubmitted[mat]} onClick={() => setBachCi2(p => ({...p,[mat]:n}))}
-                              className={`w-11 h-11 rounded-full border-2 font-bold text-sm transition-all ${bachCi2[mat]===n?'bg-amber-500 border-amber-500 text-white':'border-amber-500 text-amber-800 hover:bg-amber-100 disabled:opacity-40'}`}>
-                              {n}
+                    {ci?.item2 && (() => {
+                      const key = `${mat}-ci2`
+                      const curVal = bachCi2[mat] ?? null
+                      const otroOpen = key in otroText || (curVal !== null && ![1,2,3,4,5].includes(curVal))
+                      return (
+                        <div className="mb-6 bg-amber-50 border-2 border-amber-300 rounded-xl p-4">
+                          <span className="inline-block bg-amber-400 text-white text-xs font-bold px-3 py-1 rounded-full mb-3">✏️ Criterio adicional</span>
+                          <label className="block text-sm font-semibold text-amber-900 mb-2">{CRITERIOS.length+(ci.item1?2:1)}. {ci.item2}</label>
+                          <div className="flex gap-2 flex-wrap items-center mb-3">
+                            {[1,2,3,4,5].map(n => (
+                              <button key={n} disabled={bachSubmitted[mat]}
+                                onClick={() => { setBachCi2(p => ({...p,[mat]:n})); closeOtro(key) }}
+                                className={`w-11 h-11 rounded-full border-2 font-bold text-sm transition-all ${curVal===n&&!otroOpen?'bg-amber-500 border-amber-500 text-white':bachSubmitted[mat]?'border-gray-200 text-gray-300 cursor-default':'border-amber-500 text-amber-800 hover:bg-amber-100'}`}>
+                                {n}
+                              </button>
+                            ))}
+                            <button disabled={bachSubmitted[mat]}
+                              onClick={() => { if(otroOpen){closeOtro(key);setBachCi2(p=>({...p,[mat]:null}))}else openOtro(key,curVal) }}
+                              className={`px-3 h-11 rounded-full border-2 font-bold text-sm transition-all ${otroOpen?'bg-amber-600 border-amber-600 text-white':bachSubmitted[mat]?'border-gray-200 text-gray-300 cursor-default':'border-amber-500 text-amber-700 hover:bg-amber-50'}`}>
+                              Otro
                             </button>
-                          ))}
+                            {otroOpen && (
+                              <input type="text" inputMode="decimal"
+                                value={key in otroText ? otroText[key] : (curVal!==null?String(curVal):'')}
+                                onChange={e => handleOtroInput(key, e.target.value, v => setBachCi2(p => ({...p,[mat]:v})))}
+                                disabled={bachSubmitted[mat]} placeholder="0.0"
+                                className="w-16 h-11 border-2 border-amber-400 rounded-lg text-center font-bold text-amber-800 text-sm focus:outline-none focus:border-amber-600 disabled:bg-gray-50 disabled:text-gray-400" />
+                            )}
+                          </div>
+                          <textarea value={bachCi2j[mat]||''} onChange={e => setBachCi2j(p => ({...p,[mat]:e.target.value}))}
+                            disabled={bachSubmitted[mat]} rows={2}
+                            className="w-full border-2 border-amber-200 rounded-lg p-3 text-sm text-gray-900 focus:border-amber-500 outline-none disabled:bg-gray-50"
+                            placeholder="Justifica tu valoración en este criterio..." />
                         </div>
-                        <textarea value={bachCi2j[mat]||''} onChange={e => setBachCi2j(p => ({...p,[mat]:e.target.value}))}
-                          disabled={bachSubmitted[mat]} rows={2}
-                          className="w-full border-2 border-amber-200 rounded-lg p-3 text-sm text-gray-900 focus:border-amber-500 outline-none disabled:bg-gray-50"
-                          placeholder="Justifica tu valoración en este criterio..." />
-                      </div>
-                    )}
+                      )
+                    })()}
 
                     <div className="mb-5 p-4 bg-blue-50 rounded-xl flex items-center gap-4">
                       <div>
