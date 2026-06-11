@@ -52,6 +52,7 @@ export default function AutoevaluacionPage() {
   const [bachCi1j, setBachCi1j] = useState<Record<string, string>>({})
   const [bachCi2j, setBachCi2j] = useState<Record<string, string>>({})
   const [submitting, setSubmitting] = useState(false)
+  const [draftBanner, setDraftBanner] = useState(false)
   const _draftRef = useRef(false)
 
   useEffect(() => {
@@ -112,22 +113,31 @@ export default function AutoevaluacionPage() {
     const gn   = normalizeGrade(gradeKey)
     const type = getFormType(gn)
 
+    // Intentar recuperar borrador guardado
+    let draft: any = null
+    try {
+      const raw = localStorage.getItem(DRAFT_KEY)
+      if (raw) {
+        const d = JSON.parse(raw)
+        if (d.currentName === nombre && normalizeGrade(d.currentGrade) === gn) draft = d
+      }
+    } catch { /**/ }
+
     if (type === 'bachillerato') {
       const mats = MATERIAS_BACHILLERATO[gn] || []
       setMaterias(mats)
 
-      let draft: any = null
-      try {
-        const raw = localStorage.getItem(DRAFT_KEY)
-        if (raw) { const d = JSON.parse(raw); if (d.currentName === nombre && normalizeGrade(d.currentGrade) === gn) draft = d }
-      } catch { /**/ }
-
       if (draft) {
-        setBachValues(draft.bachValues || {}); setBachReflexion(draft.bachReflexion || {})
+        setBachValues(draft.bachValues || {})
+        setBachReflexion(draft.bachReflexion || {})
         setBachSubmitted(draft.bachSubmitted || {})
-        setBachCi1(draft.bachCi1 || {}); setBachCi2(draft.bachCi2 || {})
-        setBachCi1j(draft.bachCi1j || {}); setBachCi2j(draft.bachCi2j || {})
+        setBachCi1(draft.bachCi1 || {})
+        setBachCi2(draft.bachCi2 || {})
+        setBachCi1j(draft.bachCi1j || {})
+        setBachCi2j(draft.bachCi2j || {})
         setCurrentMateriaIdx(draft.currentMateriaIdx || 0)
+        setDraftBanner(true)
+        setTimeout(() => setDraftBanner(false), 5000)
       } else {
         const init: Record<string, Record<string, number | null>> = {}
         const c1: Record<string, number|null> = {}; const c2: Record<string, number|null> = {}
@@ -149,6 +159,20 @@ export default function AutoevaluacionPage() {
         } catch { /**/ }
       }
     }
+
+    if (type === 'global') {
+      if (draft) {
+        setGlobalValues(draft.globalValues || { participacion: null, puntualidad: null, cumplimiento: null, autonomia: null, atencion: null })
+        setGlobalReflexion(draft.globalReflexion || '')
+        setGlobalCompromiso(draft.globalCompromiso || '')
+        setDraftBanner(true)
+        setTimeout(() => setDraftBanner(false), 5000)
+      } else {
+        setGlobalValues({ participacion: null, puntualidad: null, cumplimiento: null, autonomia: null, atencion: null })
+        setGlobalReflexion(''); setGlobalCompromiso('')
+      }
+    }
+
     setScreen('form'); window.scrollTo(0, 0)
   }
 
@@ -294,6 +318,14 @@ export default function AutoevaluacionPage() {
         </div>
         <button onClick={() => setScreen('login')} className="text-sm bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg">Salir</button>
       </header>
+
+      {/* Banner: borrador recuperado */}
+      {draftBanner && (
+        <div className="bg-green-600 text-white text-sm font-semibold px-4 py-3 flex items-center justify-between">
+          <span>✅ Borrador recuperado — continuando desde donde lo dejaste.</span>
+          <button onClick={() => setDraftBanner(false)} className="ml-4 text-white/70 hover:text-white font-bold text-lg leading-none">✕</button>
+        </div>
+      )}
 
       <div className="max-w-2xl mx-auto px-4 py-6">
 
