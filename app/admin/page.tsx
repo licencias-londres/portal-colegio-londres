@@ -395,6 +395,7 @@ export default function AdminPage() {
 
         {/* ——— CONFIGURACIÓN ——— */}
         {activeTab === 'settings' && (
+          <div className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="bg-gray-800 rounded-2xl p-6 border border-gray-700">
               <h3 className="text-base font-bold text-white mb-4">Configuración General</h3>
@@ -469,6 +470,78 @@ export default function AdminPage() {
                 {savingConfig ? 'Guardando...' : '💾 Guardar fechas'}
               </button>
             </div>
+          </div>
+
+          {/* Horario automático */}
+          <div className="bg-gray-800 rounded-2xl p-6 border border-gray-700">
+            <h3 className="text-base font-bold text-white mb-1">Horario Automático de Plataforma</h3>
+            <p className="text-xs text-gray-400 mb-5">Si configuras fechas de apertura y cierre, la plataforma se abre y cierra automáticamente para los estudiantes, sin necesidad de cambiar el estado manualmente.</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+              {[1,2,3,4].map(p => {
+                const ps = ((config.platform_schedule || {})[String(p)]) || {}
+                const hrs = Array.from({length:12}, (_,i) => String(i+1))
+                const mins = ['00','05','10','15','20','25','30','35','40','45','50','55','59']
+                const updPs = (key: string, val: string) =>
+                  setConfig((prev: any) => ({
+                    ...prev,
+                    platform_schedule: {
+                      ...(prev.platform_schedule || {}),
+                      [String(p)]: { ...((prev.platform_schedule || {})[String(p)] || {}), [key]: val }
+                    }
+                  }))
+                return (
+                  <div key={p} className="bg-gray-900 rounded-xl p-4 border border-gray-700">
+                    <p className="text-xs font-bold text-blue-400 mb-3">{p}° Período</p>
+                    <div className="mb-3">
+                      <p className="text-xs font-semibold text-green-400 mb-1.5">🟢 Apertura</p>
+                      <input type="date" value={ps.openDate || ''} onChange={e => updPs('openDate', e.target.value)}
+                        className="w-full bg-gray-800 text-white border border-gray-700 rounded-lg p-1.5 text-xs mb-1.5 outline-none focus:border-green-500" />
+                      <div className="flex gap-1">
+                        <select value={ps.openHour || '7'} onChange={e => updPs('openHour', e.target.value)}
+                          className="flex-1 bg-gray-800 text-white border border-gray-700 rounded p-1 text-xs outline-none">
+                          {hrs.map(h => <option key={h} value={h}>{h}</option>)}
+                        </select>
+                        <span className="text-gray-500 self-center text-xs">:</span>
+                        <select value={ps.openMin || '00'} onChange={e => updPs('openMin', e.target.value)}
+                          className="flex-1 bg-gray-800 text-white border border-gray-700 rounded p-1 text-xs outline-none">
+                          {mins.map(m => <option key={m} value={m}>{m}</option>)}
+                        </select>
+                        <select value={ps.openAmPm || 'AM'} onChange={e => updPs('openAmPm', e.target.value)}
+                          className="w-12 bg-gray-800 text-white border border-gray-700 rounded p-1 text-xs outline-none">
+                          <option value="AM">AM</option><option value="PM">PM</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-xs font-semibold text-red-400 mb-1.5">🔴 Cierre</p>
+                      <input type="date" value={ps.closeDate || ''} onChange={e => updPs('closeDate', e.target.value)}
+                        className="w-full bg-gray-800 text-white border border-gray-700 rounded-lg p-1.5 text-xs mb-1.5 outline-none focus:border-red-500" />
+                      <div className="flex gap-1">
+                        <select value={ps.closeHour || '11'} onChange={e => updPs('closeHour', e.target.value)}
+                          className="flex-1 bg-gray-800 text-white border border-gray-700 rounded p-1 text-xs outline-none">
+                          {hrs.map(h => <option key={h} value={h}>{h}</option>)}
+                        </select>
+                        <span className="text-gray-500 self-center text-xs">:</span>
+                        <select value={ps.closeMin || '59'} onChange={e => updPs('closeMin', e.target.value)}
+                          className="flex-1 bg-gray-800 text-white border border-gray-700 rounded p-1 text-xs outline-none">
+                          {mins.map(m => <option key={m} value={m}>{m}</option>)}
+                        </select>
+                        <select value={ps.closeAmPm || 'PM'} onChange={e => updPs('closeAmPm', e.target.value)}
+                          className="w-12 bg-gray-800 text-white border border-gray-700 rounded p-1 text-xs outline-none">
+                          <option value="AM">AM</option><option value="PM">PM</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+            <button onClick={saveConfig} disabled={savingConfig}
+              className="mt-5 w-full bg-blue-700 hover:bg-blue-600 text-white py-3 rounded-lg text-sm font-bold disabled:opacity-50 transition">
+              {savingConfig ? 'Guardando...' : '💾 Guardar horario automático'}
+            </button>
+          </div>
+
           </div>
         )}
 

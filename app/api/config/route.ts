@@ -6,6 +6,13 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 )
 
+function toH24(hour: string, min: string, ampm: string): string {
+  let h = parseInt(hour || '12')
+  if (ampm === 'PM' && h !== 12) h += 12
+  if (ampm === 'AM' && h === 12) h = 0
+  return `${String(h).padStart(2,'0')}:${(min || '00').padStart(2,'0')}:00`
+}
+
 export async function GET() {
   const { data, error } = await supabase
     .from('configuracion')
@@ -15,6 +22,15 @@ export async function GET() {
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 })
+  }
+
+  // Compute effective estado from platform_schedule if dates are configured
+  const ps = (data.platform_schedule || {})[String(data.periodo)]
+  if (ps?.openDate && ps?.closeDate) {
+    const now   = new Date()
+    const open  = new Date(`${ps.openDate}T${toH24(ps.openHour, ps.openMin, ps.openAmPm || 'AM')}`)
+    const close = new Date(`${ps.closeDate}T${toH24(ps.closeHour, ps.closeMin, ps.closeAmPm || 'PM')}`)
+    data.estado = (now >= open && now <= close) ? 'abierto' : 'cerrado'
   }
 
   return NextResponse.json(data)
