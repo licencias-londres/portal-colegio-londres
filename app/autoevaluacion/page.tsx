@@ -217,7 +217,7 @@ export default function AutoevaluacionPage() {
             <div className="mb-4">
               <label className="block text-sm font-semibold text-blue-900 mb-2">Selecciona tu grado</label>
               <select value={grade} onChange={e => { setGrade(e.target.value); setLoginError(''); setEmail(''); setStudentName('') }}
-                className="w-full border-2 border-gray-200 rounded-lg p-3 text-sm focus:border-blue-900 outline-none">
+                className="w-full border-2 border-gray-200 rounded-lg p-3 text-sm text-gray-900 focus:border-blue-900 outline-none">
                 <option value="">— Selecciona tu grado —</option>
                 <optgroup label="Preescolar y Primaria">
                   {['transicion','1','2','3','4','5'].map(g => <option key={g} value={g}>{GRADE_NAMES[g]}</option>)}
@@ -232,7 +232,7 @@ export default function AutoevaluacionPage() {
               <div className="mb-4">
                 <label className="block text-sm font-semibold text-blue-900 mb-2">Selecciona tu nombre</label>
                 <select value={studentName} onChange={e => { setStudentName(e.target.value); setLoginError('') }}
-                  className="w-full border-2 border-gray-200 rounded-lg p-3 text-sm focus:border-blue-900 outline-none">
+                  className="w-full border-2 border-gray-200 rounded-lg p-3 text-sm text-gray-900 focus:border-blue-900 outline-none">
                   <option value="">— Elige tu nombre —</option>
                   {students.map(s => <option key={s} value={s}>{s}</option>)}
                 </select>
@@ -250,7 +250,7 @@ export default function AutoevaluacionPage() {
                 <input type="email" value={email} onChange={e => { setEmail(e.target.value); setLoginError('') }}
                   onKeyDown={e => e.key === 'Enter' && handleVerify()}
                   placeholder="tunombre@colegiolondres.edu.co"
-                  className="w-full border-2 border-gray-200 rounded-lg p-3 text-sm focus:border-blue-900 outline-none" />
+                  className="w-full border-2 border-gray-200 rounded-lg p-3 text-sm text-gray-900 focus:border-blue-900 outline-none" />
                 {loginError && <p className="text-red-500 text-sm mt-2">{loginError}</p>}
                 <button onClick={handleVerify} disabled={verifying}
                   className="mt-4 w-full bg-blue-900 text-white py-3 rounded-lg font-semibold text-sm hover:bg-blue-800 disabled:opacity-50">
@@ -335,12 +335,12 @@ export default function AutoevaluacionPage() {
             <div className="mb-4">
               <label className="block text-sm font-semibold text-blue-900 mb-2">Reflexión y justificación de la nota:</label>
               <textarea value={globalReflexion} onChange={e => setGlobalReflexion(e.target.value)} rows={3}
-                className="w-full border-2 border-gray-200 rounded-lg p-3 text-sm focus:border-blue-900 outline-none" placeholder="Escribe aquí..." />
+                className="w-full border-2 border-gray-200 rounded-lg p-3 text-sm text-gray-900 focus:border-blue-900 outline-none" placeholder="Escribe aquí..." />
             </div>
             <div className="mb-6">
               <label className="block text-sm font-semibold text-blue-900 mb-2">Mi compromiso para el próximo período es:</label>
               <textarea value={globalCompromiso} onChange={e => setGlobalCompromiso(e.target.value)} rows={3}
-                className="w-full border-2 border-gray-200 rounded-lg p-3 text-sm focus:border-blue-900 outline-none" placeholder="Escribe aquí..." />
+                className="w-full border-2 border-gray-200 rounded-lg p-3 text-sm text-gray-900 focus:border-blue-900 outline-none" placeholder="Escribe aquí..." />
             </div>
             <button onClick={submitGlobal} disabled={submitting||Object.values(globalValues).some(v=>v===null)||!globalReflexion||!globalCompromiso}
               className="w-full bg-green-600 text-white py-3 rounded-lg font-bold disabled:opacity-50 hover:bg-green-700">
@@ -410,7 +410,7 @@ export default function AutoevaluacionPage() {
                     </div>
                     <textarea value={bachCi1j[mat]||''} onChange={e => setBachCi1j(p => ({...p,[mat]:e.target.value}))}
                       disabled={bachSubmitted[mat]} rows={2}
-                      className="w-full border-2 border-amber-200 rounded-lg p-3 text-sm focus:border-amber-500 outline-none disabled:bg-gray-50"
+                      className="w-full border-2 border-amber-200 rounded-lg p-3 text-sm text-gray-900 focus:border-amber-500 outline-none disabled:bg-gray-50"
                       placeholder="Justifica tu valoración en este criterio..." />
                   </div>
                 )}
@@ -429,7 +429,7 @@ export default function AutoevaluacionPage() {
                     </div>
                     <textarea value={bachCi2j[mat]||''} onChange={e => setBachCi2j(p => ({...p,[mat]:e.target.value}))}
                       disabled={bachSubmitted[mat]} rows={2}
-                      className="w-full border-2 border-amber-200 rounded-lg p-3 text-sm focus:border-amber-500 outline-none disabled:bg-gray-50"
+                      className="w-full border-2 border-amber-200 rounded-lg p-3 text-sm text-gray-900 focus:border-amber-500 outline-none disabled:bg-gray-50"
                       placeholder="Justifica tu valoración en este criterio..." />
                   </div>
                 )}
@@ -443,7 +443,7 @@ export default function AutoevaluacionPage() {
                   <label className="block text-sm font-semibold text-blue-900 mb-2">Justifica la nota y escribe tu compromiso de mejoramiento:</label>
                   <textarea value={bachReflexion[mat]||''} onChange={e => setBachReflexion(p => ({...p,[mat]:e.target.value}))}
                     disabled={bachSubmitted[mat]} rows={3}
-                    className="w-full border-2 border-gray-200 rounded-lg p-3 text-sm focus:border-blue-900 outline-none disabled:bg-gray-50"
+                    className="w-full border-2 border-gray-200 rounded-lg p-3 text-sm text-gray-900 focus:border-blue-900 outline-none disabled:bg-gray-50"
                     placeholder="Escribe aquí..." />
                 </div>
 

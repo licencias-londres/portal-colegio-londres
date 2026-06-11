@@ -233,14 +233,14 @@ export default function TeacherPage() {
           onChange={e => { setLoginEmail(e.target.value); setLoginError('') }}
           onKeyDown={e => e.key === 'Enter' && handleLogin()}
           placeholder="tunombre@colegiolondres.edu.co"
-          className="w-full border-2 border-gray-200 rounded-lg p-3 text-sm focus:border-blue-900 outline-none mb-3" />
+          className="w-full border-2 border-gray-200 rounded-lg p-3 text-sm text-gray-900 focus:border-blue-900 outline-none mb-3" />
 
         <label className="block text-sm font-semibold text-blue-900 mb-1">Contraseña</label>
         <input type="password" value={loginPassword}
           onChange={e => { setLoginPassword(e.target.value); setLoginError('') }}
           onKeyDown={e => e.key === 'Enter' && handleLogin()}
           placeholder="••••••••••"
-          className="w-full border-2 border-gray-200 rounded-lg p-3 text-sm focus:border-blue-900 outline-none mb-3" />
+          className="w-full border-2 border-gray-200 rounded-lg p-3 text-sm text-gray-900 focus:border-blue-900 outline-none mb-3" />
 
         {loginError && <p className="text-red-500 text-sm mb-3">{loginError}</p>}
 
@@ -458,14 +458,14 @@ export default function TeacherPage() {
               <label className="block text-sm font-semibold text-gray-700 mb-1">Criterio adicional 1 (opcional)</label>
               <input type="text" value={ciItem1} onChange={e => setCiItem1(e.target.value)} maxLength={120}
                 placeholder="Ej: Participé activamente en los proyectos de aula..."
-                className="w-full border-2 border-gray-200 rounded-lg p-2.5 text-sm focus:border-amber-400 outline-none" />
+                className="w-full border-2 border-gray-200 rounded-lg p-2.5 text-sm text-gray-900 focus:border-amber-400 outline-none" />
             </div>
 
             <div className="mb-6">
               <label className="block text-sm font-semibold text-gray-700 mb-1">Criterio adicional 2 (opcional)</label>
               <input type="text" value={ciItem2} onChange={e => setCiItem2(e.target.value)} maxLength={120}
                 placeholder="Ej: Demostré habilidades de investigación..."
-                className="w-full border-2 border-gray-200 rounded-lg p-2.5 text-sm focus:border-amber-400 outline-none" />
+                className="w-full border-2 border-gray-200 rounded-lg p-2.5 text-sm text-gray-900 focus:border-amber-400 outline-none" />
             </div>
 
             <div className="flex gap-2">
