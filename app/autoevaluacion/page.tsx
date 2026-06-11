@@ -2,6 +2,9 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { MATERIAS_BACHILLERATO, GRADE_NAMES, normalizeGrade, getFormType } from '@/lib/teacher-data'
+import ConfigModal from '@/components/ConfigModal'
+
+const CFG_PASSWORD = 'Colondres1989'
 
 interface Config { periodo: string; anio: string; estado: string; mensaje: string; institucion: string }
 interface CriterioForm { id: string; label: string }
@@ -56,6 +59,12 @@ export default function AutoevaluacionPage() {
   const [globalSubmitted, setGlobalSubmitted] = useState(false)
   const [otroText, setOtroText] = useState<Record<string, string>>({})
   const _draftRef = useRef(false)
+
+  // Modal de configuración (acceso con contraseña)
+  const [cfgPwdOpen, setCfgPwdOpen] = useState(false)
+  const [cfgPwdVal,  setCfgPwdVal]  = useState('')
+  const [cfgPwdErr,  setCfgPwdErr]  = useState('')
+  const [cfgOpen,    setCfgOpen]    = useState(false)
 
   useEffect(() => {
     fetch('/api/config').then(r => r.json()).then(d => setConfig({
@@ -284,10 +293,57 @@ export default function AutoevaluacionPage() {
   // ====================================================== LOGIN
   if (screen === 'login') return (
     <div className="min-h-screen bg-gray-50">
-      <header className="bg-blue-900 text-white px-6 py-4">
-        <h1 className="text-lg font-bold">Colegio Londres</h1>
-        <p className="text-sm text-blue-200">Autoevaluación Estudiantil</p>
+      <header className="bg-blue-900 text-white px-6 py-4 flex justify-between items-center">
+        <div>
+          <h1 className="text-lg font-bold">Colegio Londres</h1>
+          <p className="text-sm text-blue-200">Autoevaluación Estudiantil</p>
+        </div>
+        <button onClick={() => { setCfgPwdOpen(true); setCfgPwdVal(''); setCfgPwdErr('') }}
+          className="text-white/30 hover:text-white/70 transition p-1 text-xl" title="Configuración">
+          ⚙️
+        </button>
       </header>
+
+      {/* Modal: contraseña de acceso a configuración */}
+      {cfgPwdOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+             onClick={() => setCfgPwdOpen(false)}>
+          <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6" onClick={e => e.stopPropagation()}>
+            <div className="text-center mb-5">
+              <div className="w-12 h-12 bg-blue-900 rounded-full flex items-center justify-center text-white text-2xl mx-auto mb-3">⚙️</div>
+              <h2 className="font-bold text-blue-900 text-lg">Configuración</h2>
+              <p className="text-xs text-gray-500 mt-1">Acceso restringido a administradores</p>
+            </div>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">Contraseña</label>
+            <input type="password" value={cfgPwdVal}
+              onChange={e => { setCfgPwdVal(e.target.value); setCfgPwdErr('') }}
+              onKeyDown={e => {
+                if (e.key === 'Enter') {
+                  if (cfgPwdVal === CFG_PASSWORD) { setCfgPwdOpen(false); setCfgOpen(true) }
+                  else setCfgPwdErr('Contraseña incorrecta')
+                }
+              }}
+              placeholder="••••••••••"
+              className="w-full border-2 border-gray-200 rounded-lg p-3 text-sm text-gray-900 focus:border-blue-900 outline-none mb-2" />
+            {cfgPwdErr && <p className="text-red-500 text-sm mb-2">{cfgPwdErr}</p>}
+            <button
+              onClick={() => {
+                if (cfgPwdVal === CFG_PASSWORD) { setCfgPwdOpen(false); setCfgOpen(true) }
+                else setCfgPwdErr('Contraseña incorrecta')
+              }}
+              className="w-full bg-blue-900 text-white py-3 rounded-lg font-semibold text-sm hover:bg-blue-800 transition">
+              Ingresar
+            </button>
+            <button onClick={() => setCfgPwdOpen(false)}
+              className="w-full mt-2 text-sm text-gray-400 hover:text-gray-600 py-2">
+              Cancelar
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de configuración completo */}
+      <ConfigModal open={cfgOpen} onClose={() => setCfgOpen(false)} />
 
       {config?.estado === 'cerrado' ? (
         <div className="max-w-md mx-auto mt-16 text-center p-6">

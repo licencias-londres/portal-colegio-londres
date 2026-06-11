@@ -1,12 +1,13 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useState } from 'react'
 import { GRADE_NAMES, SUPER_ADMINS } from '@/lib/teacher-data'
+import ConfigModal from '@/components/ConfigModal'
 
 const SESSION_KEY = 'teacher_session_v2'
 const SESSION_TTL = 8 * 60 * 60 * 1000 // 8 horas
 
-// Contraseña temporal compartida para todos los docentes
+// ContraseÃ±a temporal compartida para todos los docentes
 // TODO: reemplazar por sistema OTP cuando se configure el proveedor de email
 const TEACHER_PASSWORD = 'Colondres1989'
 
@@ -40,19 +41,19 @@ function Ring({ pct, size = 64 }: { pct: number; size?: number }) {
 }
 
 export default function TeacherPage() {
-  // — Login por contraseña (activo) —
+  // â€” Login por contraseÃ±a (activo) â€”
   const [phase, setPhase] = useState<'login' | 'dashboard'>('login')
   const [loginEmail, setLoginEmail]       = useState('')
   const [loginPassword, setLoginPassword] = useState('')
   const [loginError, setLoginError]       = useState('')
   const [logging, setLogging]             = useState(false)
 
-  /* ── CÓDIGO OTP — comentado hasta configurar proveedor de email ──────────
+  /* â”€â”€ CÃ“DIGO OTP â€” comentado hasta configurar proveedor de email â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   // const [phase, setPhase] = useState<'login' | 'otp' | 'dashboard'>('login')
   // const [otpCode, setOtpCode]   = useState('')
   // const [sending, setSending]   = useState(false)
   // const [verifying, setVerifying] = useState(false)
-  // ─────────────────────────────────────────────────────────────────────── */
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
   const [session, setSession]     = useState<TeacherSession | null>(null)
   const [dashboard, setDashboard] = useState<DashboardData | null>(null)
@@ -68,21 +69,10 @@ export default function TeacherPage() {
   const [notifying, setNotifying]         = useState(false)
   const [notifyResult, setNotifyResult]   = useState('')
 
-  // Modal de configuración (solo super admins)
-  const [cfgOpen, setCfgOpen]         = useState(false)
-  const [cfgTab, setCfgTab]           = useState<'general' | 'periodos' | 'estudiantes'>('general')
-  const [cfgData, setCfgData]         = useState<any>({})
-  const [savingCfg, setSavingCfg]     = useState(false)
-  const [cfgSaved, setCfgSaved]       = useState(false)
-  const [cfgStudents, setCfgStudents] = useState<any[]>([])
-  const [loadingCfgSt, setLoadingCfgSt]     = useState(false)
-  const [newStNombre, setNewStNombre]       = useState('')
-  const [newStEmail, setNewStEmail]         = useState('')
-  const [newStGrado, setNewStGrado]         = useState('')
-  const [addingCfgSt, setAddingCfgSt]       = useState(false)
-  const [cfgStFilter, setCfgStFilter]       = useState('')
+  // Modal de configuraciÃ³n (solo super admins)
+  const [cfgOpen, setCfgOpen] = useState(false)
 
-  // Restaurar sesión guardada
+  // Restaurar sesiÃ³n guardada
   useEffect(() => {
     const raw = localStorage.getItem(SESSION_KEY)
     if (!raw) return
@@ -113,12 +103,12 @@ export default function TeacherPage() {
     }
   }
 
-  // — Login con contraseña —
+  // â€” Login con contraseÃ±a â€”
   async function handleLogin() {
     if (!loginEmail.trim()) { setLoginError('Ingresa tu correo'); return }
-    if (!loginPassword)     { setLoginError('Ingresa tu contraseña'); return }
+    if (!loginPassword)     { setLoginError('Ingresa tu contraseÃ±a'); return }
     if (loginPassword !== TEACHER_PASSWORD) {
-      setLoginError('Contraseña incorrecta')
+      setLoginError('ContraseÃ±a incorrecta')
       return
     }
     setLogging(true); setLoginError('')
@@ -136,7 +126,7 @@ export default function TeacherPage() {
     }
   }
 
-  /* ── CÓDIGO OTP — comentado hasta configurar proveedor de email ──────────
+  /* â”€â”€ CÃ“DIGO OTP â€” comentado hasta configurar proveedor de email â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   // async function handleSendOtp() {
   //   if (!loginEmail.trim()) { setLoginError('Ingresa tu correo'); return }
   //   setSending(true); setLoginError('')
@@ -146,11 +136,11 @@ export default function TeacherPage() {
   //   const d = await r.json()
   //   setSending(false)
   //   if (d.success) setPhase('otp')
-  //   else setLoginError(d.error || 'Error enviando código')
+  //   else setLoginError(d.error || 'Error enviando cÃ³digo')
   // }
   //
   // async function handleVerifyOtp() {
-  //   if (!otpCode.trim()) { setLoginError('Ingresa el código'); return }
+  //   if (!otpCode.trim()) { setLoginError('Ingresa el cÃ³digo'); return }
   //   setVerifying(true); setLoginError('')
   //   const r = await fetch('/api/teacher/otp', { method: 'POST',
   //     headers: { 'Content-Type': 'application/json' },
@@ -162,10 +152,10 @@ export default function TeacherPage() {
   //     localStorage.setItem(SESSION_KEY, JSON.stringify(sess))
   //     setSession(sess); setPhase('dashboard')
   //   } else {
-  //     setLoginError(d.error || 'Código incorrecto')
+  //     setLoginError(d.error || 'CÃ³digo incorrecto')
   //   }
   // }
-  // ─────────────────────────────────────────────────────────────────────── */
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
   function handleLogout() {
     localStorage.removeItem(SESSION_KEY)
@@ -213,70 +203,7 @@ export default function TeacherPage() {
       }) })
     const d = await r.json()
     setNotifying(false)
-    setNotifyResult(d.success ? `✅ Se enviaron ${d.sent} recordatorio(s).` : `❌ ${d.error}`)
-  }
-
-  // ── Funciones de configuración (super admin) ──────────────────────────
-  async function openCfgModal() {
-    const r = await fetch('/api/config')
-    const d = await r.json()
-    setCfgData(d)
-    setCfgTab('general')
-    setCfgStudents([])
-    setCfgOpen(true)
-  }
-
-  async function saveCfgData() {
-    setSavingCfg(true)
-    const periodoDates = [1,2,3,4].map(p => ({
-      inicio: cfgData[`periodo_${p}_inicio`] || null,
-      fin:    cfgData[`periodo_${p}_fin`]    || null
-    }))
-    await fetch('/api/config', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        periodo: cfgData.periodo, anio: cfgData.anio, estado: cfgData.estado,
-        mensaje: cfgData.mensaje, institucion: cfgData.institucion,
-        platformSchedule: cfgData.platform_schedule || {}, periodoDates
-      }) })
-    setSavingCfg(false)
-    setCfgSaved(true)
-    setTimeout(() => setCfgSaved(false), 3000)
-  }
-
-  async function loadCfgStudents() {
-    setLoadingCfgSt(true)
-    const r = await fetch('/api/admin/students')
-    const d = await r.json()
-    setLoadingCfgSt(false)
-    if (d.success) setCfgStudents(d.students)
-  }
-
-  async function addCfgStudent() {
-    if (!newStNombre.trim() || !newStGrado.trim()) return
-    setAddingCfgSt(true)
-    const r = await fetch('/api/admin/students', { method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ nombre: newStNombre, email: newStEmail, grado: newStGrado }) })
-    const d = await r.json()
-    setAddingCfgSt(false)
-    if (d.success) { setNewStNombre(''); setNewStEmail(''); setNewStGrado(''); loadCfgStudents() }
-  }
-
-  async function deleteCfgStudent(id: string) {
-    if (!confirm('¿Eliminar este estudiante?')) return
-    await fetch('/api/admin/students', { method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) })
-    loadCfgStudents()
-  }
-
-  function setPsVal(p: string, key: string, val: string) {
-    setCfgData((prev: any) => ({
-      ...prev,
-      platform_schedule: {
-        ...(prev.platform_schedule || {}),
-        [p]: { ...((prev.platform_schedule || {})[p] || {}), [key]: val }
-      }
-    }))
+    setNotifyResult(d.success ? `âœ… Se enviaron ${d.sent} recordatorio(s).` : `âŒ ${d.error}`)
   }
 
   function handlePrintGroup(group: Group) {
@@ -287,9 +214,9 @@ export default function TeacherPage() {
       <html><head><title>${group.materia} ${group.gradeLabel}</title>
       <style>body{font-family:Arial;padding:24px}table{width:100%;border-collapse:collapse}td,th{border:1px solid #ccc;padding:8px;text-align:left}h2{color:#1e3a5f}</style></head>
       <body>
-        <h2>Reporte de Pendientes — ${group.materia} ${group.gradeLabel}</h2>
-        <p>${dashboard.periodo}° Periodo ${dashboard.anio} · Docente: ${dashboard.teacher}</p>
-        <p>Enviados: ${group.submitted} / Total: ${group.totalStudents} · Pendientes: ${group.pendingCount}</p>
+        <h2>Reporte de Pendientes â€” ${group.materia} ${group.gradeLabel}</h2>
+        <p>${dashboard.periodo}Â° Periodo ${dashboard.anio} Â· Docente: ${dashboard.teacher}</p>
+        <p>Enviados: ${group.submitted} / Total: ${group.totalStudents} Â· Pendientes: ${group.pendingCount}</p>
         <table><tr><th>Estudiante</th><th>Estado</th></tr>${rows}</table>
       </body></html>`)
     win.document.close(); win.print()
@@ -300,7 +227,7 @@ export default function TeacherPage() {
     <div className="min-h-screen bg-blue-950 flex items-center justify-center px-4">
       <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-sm">
         <div className="text-center mb-6">
-          <div className="w-14 h-14 bg-blue-900 rounded-full flex items-center justify-center text-white text-2xl mx-auto mb-3">🎓</div>
+          <div className="w-14 h-14 bg-blue-900 rounded-full flex items-center justify-center text-white text-2xl mx-auto mb-3">ðŸŽ“</div>
           <h1 className="text-xl font-bold text-blue-900">Portal Docente</h1>
           <p className="text-sm text-gray-500">Colegio Londres</p>
         </div>
@@ -312,11 +239,11 @@ export default function TeacherPage() {
           placeholder="tunombre@colegiolondres.edu.co"
           className="w-full border-2 border-gray-200 rounded-lg p-3 text-sm text-gray-900 focus:border-blue-900 outline-none mb-3" />
 
-        <label className="block text-sm font-semibold text-blue-900 mb-1">Contraseña</label>
+        <label className="block text-sm font-semibold text-blue-900 mb-1">ContraseÃ±a</label>
         <input type="password" value={loginPassword}
           onChange={e => { setLoginPassword(e.target.value); setLoginError('') }}
           onKeyDown={e => e.key === 'Enter' && handleLogin()}
-          placeholder="••••••••••"
+          placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
           className="w-full border-2 border-gray-200 rounded-lg p-3 text-sm text-gray-900 focus:border-blue-900 outline-none mb-3" />
 
         {loginError && <p className="text-red-500 text-sm mb-3">{loginError}</p>}
@@ -326,27 +253,27 @@ export default function TeacherPage() {
           {logging ? 'Verificando...' : 'Ingresar al portal'}
         </button>
 
-        {/* ── BOTÓN OTP — comentado hasta configurar email ──────────────────
+        {/* â”€â”€ BOTÃ“N OTP â€” comentado hasta configurar email â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         <button onClick={handleSendOtp} disabled={sending}
           className="w-full bg-blue-900 text-white py-3 rounded-lg font-semibold text-sm hover:bg-blue-800 disabled:opacity-50">
-          {sending ? 'Enviando código...' : 'Recibir código OTP'}
+          {sending ? 'Enviando cÃ³digo...' : 'Recibir cÃ³digo OTP'}
         </button>
-        ─────────────────────────────────────────────────────────────────── */}
+        â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
 
         <p className="text-center text-xs text-gray-400 mt-6">
-          <a href="/autoevaluacion" className="hover:text-gray-600">← Volver a autoevaluación</a>
+          <a href="/autoevaluacion" className="hover:text-gray-600">â† Volver a autoevaluaciÃ³n</a>
         </p>
       </div>
     </div>
   )
 
-  /* ── PANTALLA OTP — comentada hasta configurar email ──────────────────────
+  /* â”€â”€ PANTALLA OTP â€” comentada hasta configurar email â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   if (phase === 'otp') return (
     <div className="min-h-screen bg-blue-950 flex items-center justify-center px-4">
       <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-sm">
-        ...pantalla de ingreso de código OTP...
+        ...pantalla de ingreso de cÃ³digo OTP...
         <p className="text-sm text-gray-600 mb-4 text-center">
-          Código enviado a <strong>{loginEmail}</strong>. Revisa tu correo.
+          CÃ³digo enviado a <strong>{loginEmail}</strong>. Revisa tu correo.
         </p>
         <input type="text" inputMode="numeric" maxLength={6} value={otpCode}
           onChange={e => { setOtpCode(e.target.value); setLoginError('') }}
@@ -359,12 +286,12 @@ export default function TeacherPage() {
         </button>
         <button onClick={() => { setPhase('login'); setOtpCode(''); setLoginError('') }}
           className="w-full text-sm text-gray-400 hover:text-gray-600 py-2">
-          ← Cambiar correo
+          â† Cambiar correo
         </button>
       </div>
     </div>
   )
-  ──────────────────────────────────────────────────────────────────────────── */
+  â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
   // ====================================================== DASHBOARD
   return (
@@ -373,21 +300,21 @@ export default function TeacherPage() {
       <header className="bg-blue-900 text-white px-6 py-4 flex justify-between items-center shadow-lg">
         <div>
           <h1 className="text-lg font-bold">{session?.nombre}</h1>
-          <p className="text-sm text-blue-300">Portal Docente — Colegio Londres</p>
+          <p className="text-sm text-blue-300">Portal Docente â€” Colegio Londres</p>
         </div>
         <div className="flex items-center gap-3">
           {dashboard && (
             <select value={periodoFilter} onChange={e => setPeriodoFilter(e.target.value)}
               className="bg-blue-800 text-white border border-blue-600 rounded-lg px-3 py-1.5 text-sm">
               {['1','2','3','4'].map(p => (
-                <option key={p} value={p}>{p}° Periodo {dashboard.anio}</option>
+                <option key={p} value={p}>{p}Â° Periodo {dashboard.anio}</option>
               ))}
             </select>
           )}
           {session && SUPER_ADMINS.includes(session.email) && (
-            <button onClick={openCfgModal}
+            <button onClick={() => setCfgOpen(true)}
               className="text-sm bg-red-700 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition flex items-center gap-1.5 font-medium">
-              ⚙️ Configuración
+              âš™ï¸ ConfiguraciÃ³n
             </button>
           )}
           <button onClick={handleLogout}
@@ -399,7 +326,7 @@ export default function TeacherPage() {
 
       <div className="max-w-6xl mx-auto px-4 py-6">
 
-        {/* Resumen rápido */}
+        {/* Resumen rÃ¡pido */}
         {dashboard && (
           <div className="grid grid-cols-3 gap-4 mb-6">
             {[
@@ -437,15 +364,15 @@ export default function TeacherPage() {
 
                   <div className="text-xs text-gray-500 mb-3">
                     <span className="text-green-600 font-semibold">{group.submitted} enviaron</span>
-                    {' · '}
+                    {' Â· '}
                     <span className="text-red-500 font-semibold">{group.pendingCount} pendientes</span>
-                    {' · '}{group.totalStudents} total
+                    {' Â· '}{group.totalStudents} total
                   </div>
 
-                  {/* Ítem personalizado badge */}
+                  {/* Ãtem personalizado badge */}
                   {(group.ci?.item1 || group.ci?.item2) && (
                     <div className="text-xs bg-amber-50 text-amber-700 border border-amber-200 rounded-lg px-2 py-1 mb-3">
-                      ✏️ {[group.ci.item1, group.ci.item2].filter(Boolean).length} criterio(s) adicional(es)
+                      âœï¸ {[group.ci.item1, group.ci.item2].filter(Boolean).length} criterio(s) adicional(es)
                     </div>
                   )}
 
@@ -457,12 +384,12 @@ export default function TeacherPage() {
                     {group.formType === 'bachillerato' && (
                       <button onClick={() => openCiModal(group)}
                         className="text-xs bg-amber-100 hover:bg-amber-200 text-amber-800 px-3 py-1.5 rounded-lg font-medium transition">
-                        ✏️ Criterios extra
+                        âœï¸ Criterios extra
                       </button>
                     )}
                     <button onClick={() => handlePrintGroup(group)}
                       className="text-xs bg-blue-100 hover:bg-blue-200 text-blue-800 px-3 py-1.5 rounded-lg font-medium transition">
-                      🖨️ PDF
+                      ðŸ–¨ï¸ PDF
                     </button>
                   </div>
                 </div>
@@ -473,7 +400,7 @@ export default function TeacherPage() {
 
         {!loading && dashboard && dashboard.groups.length === 0 && (
           <div className="text-center py-20 text-gray-400">
-            <p className="text-4xl mb-4">📋</p>
+            <p className="text-4xl mb-4">ðŸ“‹</p>
             <p>No tienes grupos asignados para este periodo.</p>
           </div>
         )}
@@ -486,14 +413,14 @@ export default function TeacherPage() {
             <div className="flex justify-between items-center mb-4">
               <div>
                 <h2 className="font-bold text-blue-900 text-lg">{pendingGroup.materia}</h2>
-                <p className="text-sm text-gray-500">{pendingGroup.gradeLabel} · {pendingGroup.pendingCount} pendiente(s)</p>
+                <p className="text-sm text-gray-500">{pendingGroup.gradeLabel} Â· {pendingGroup.pendingCount} pendiente(s)</p>
               </div>
               <button onClick={() => { setPendingGroup(null); setNotifyResult('') }}
-                className="text-gray-400 hover:text-gray-600 text-xl font-bold">✕</button>
+                className="text-gray-400 hover:text-gray-600 text-xl font-bold">âœ•</button>
             </div>
 
             {pendingGroup.pendingNames.length === 0 ? (
-              <div className="text-center py-6 text-green-600 font-semibold">✅ ¡Todos completaron la autoevaluación!</div>
+              <div className="text-center py-6 text-green-600 font-semibold">âœ… Â¡Todos completaron la autoevaluaciÃ³n!</div>
             ) : (
               <>
                 <div className="max-h-60 overflow-y-auto mb-4">
@@ -506,14 +433,14 @@ export default function TeacherPage() {
                 </div>
 
                 {notifyResult && (
-                  <div className={`text-sm p-3 rounded-lg mb-3 ${notifyResult.startsWith('✅') ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
+                  <div className={`text-sm p-3 rounded-lg mb-3 ${notifyResult.startsWith('âœ…') ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
                     {notifyResult}
                   </div>
                 )}
 
                 <button onClick={() => sendNotification(pendingGroup)} disabled={notifying}
                   className="w-full bg-blue-900 text-white py-2.5 rounded-lg text-sm font-semibold hover:bg-blue-800 disabled:opacity-50">
-                  {notifying ? 'Enviando correos...' : `📧 Enviar recordatorio a ${pendingGroup.pendingCount} estudiante(s)`}
+                  {notifying ? 'Enviando correos...' : `ðŸ“§ Enviar recordatorio a ${pendingGroup.pendingCount} estudiante(s)`}
                 </button>
               </>
             )}
@@ -521,239 +448,9 @@ export default function TeacherPage() {
         </div>
       )}
 
-      {/* Modal: Configuración (super admins) */}
-      {cfgOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setCfgOpen(false)}>
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col" onClick={e => e.stopPropagation()}>
+      {/* Modal: ConfiguraciÃ³n (super admins) â€” componente compartido */}
+      <ConfigModal open={cfgOpen} onClose={() => setCfgOpen(false)} />
 
-            {/* Header */}
-            <div className="bg-gradient-to-r from-blue-900 to-blue-700 text-white px-6 py-4 rounded-t-2xl flex justify-between items-center flex-shrink-0">
-              <div>
-                <h2 className="font-bold text-lg">⚙️ Configuración</h2>
-                <p className="text-xs text-blue-200 mt-0.5">Sistema de Autoevaluación · Colegio Londres</p>
-              </div>
-              <button onClick={() => setCfgOpen(false)} className="bg-white/20 hover:bg-white/30 w-8 h-8 rounded-full flex items-center justify-center transition">✕</button>
-            </div>
-
-            {/* Tabs */}
-            <div className="border-b border-gray-200 flex flex-shrink-0">
-              {(['general', 'periodos', 'estudiantes'] as const).map(t => (
-                <button key={t}
-                  onClick={() => { setCfgTab(t); if (t === 'estudiantes' && cfgStudents.length === 0) loadCfgStudents() }}
-                  className={`px-5 py-3 text-sm font-semibold border-b-2 transition ${cfgTab === t ? 'border-blue-600 text-blue-700' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>
-                  {t === 'general' ? '📋 General' : t === 'periodos' ? '📅 Períodos' : '👥 Estudiantes'}
-                </button>
-              ))}
-            </div>
-
-            {/* Scrollable content */}
-            <div className="overflow-y-auto flex-1 p-6">
-
-              {/* GENERAL */}
-              {cfgTab === 'general' && (
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-500 mb-1">Institución</label>
-                    <input type="text" value={cfgData.institucion || ''}
-                      onChange={e => setCfgData((p: any) => ({...p, institucion: e.target.value}))}
-                      className="w-full border-2 border-gray-200 rounded-lg p-2.5 text-sm text-gray-900 focus:border-blue-600 outline-none" />
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-xs font-semibold text-gray-500 mb-1">Año</label>
-                      <input type="text" value={cfgData.anio || ''}
-                        onChange={e => setCfgData((p: any) => ({...p, anio: e.target.value}))}
-                        className="w-full border-2 border-gray-200 rounded-lg p-2.5 text-sm text-gray-900 focus:border-blue-600 outline-none" />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-semibold text-gray-500 mb-1">Período activo</label>
-                      <select value={cfgData.periodo || ''} onChange={e => setCfgData((p: any) => ({...p, periodo: e.target.value}))}
-                        className="w-full border-2 border-gray-200 rounded-lg p-2.5 text-sm text-gray-900 focus:border-blue-600 outline-none">
-                        {['1','2','3','4'].map(p => <option key={p} value={p}>{p}° Período</option>)}
-                      </select>
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-500 mb-1">Estado manual de la plataforma</label>
-                    <select value={cfgData.estado || 'cerrado'} onChange={e => setCfgData((p: any) => ({...p, estado: e.target.value}))}
-                      className="w-full border-2 border-gray-200 rounded-lg p-2.5 text-sm text-gray-900 focus:border-blue-600 outline-none">
-                      <option value="abierto">🟢 Abierta</option>
-                      <option value="cerrado">🔴 Cerrada</option>
-                    </select>
-                    <p className="text-xs text-gray-400 mt-1">Si configuras el horario automático en Períodos, este campo se ignora mientras las fechas estén activas.</p>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-500 mb-1">Mensaje para estudiantes (opcional)</label>
-                    <textarea value={cfgData.mensaje || ''} onChange={e => setCfgData((p: any) => ({...p, mensaje: e.target.value}))}
-                      rows={3} placeholder="Mensaje informativo visible en la pantalla de inicio..."
-                      className="w-full border-2 border-gray-200 rounded-lg p-2.5 text-sm text-gray-900 focus:border-blue-600 outline-none resize-none" />
-                  </div>
-                </div>
-              )}
-
-              {/* PERÍODOS */}
-              {cfgTab === 'periodos' && (
-                <div>
-                  <p className="text-xs text-gray-500 bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
-                    <strong>Horario automático:</strong> si configuras fechas de apertura y cierre, la plataforma se abre y cierra automáticamente para los estudiantes. Deja en blanco para usar el estado manual.
-                  </p>
-                  {[1,2,3,4].map(p => {
-                    const ps = (cfgData.platform_schedule || {})[String(p)] || {}
-                    const hrs = Array.from({length:12}, (_,i) => String(i+1))
-                    const mins = ['00','05','10','15','20','25','30','35','40','45','50','55','59']
-                    return (
-                      <div key={p} className="border border-gray-200 rounded-xl p-4 mb-4">
-                        <p className="text-sm font-bold text-blue-800 mb-3">{p}° Período</p>
-                        <div className="grid grid-cols-2 gap-3 mb-4">
-                          <div>
-                            <label className="block text-xs text-gray-500 mb-1">Inicio del período</label>
-                            <input type="date" value={cfgData[`periodo_${p}_inicio`] || ''}
-                              onChange={e => setCfgData((prev: any) => ({...prev, [`periodo_${p}_inicio`]: e.target.value}))}
-                              className="w-full border border-gray-200 rounded-lg p-2 text-sm text-gray-900 outline-none focus:border-blue-400" />
-                          </div>
-                          <div>
-                            <label className="block text-xs text-gray-500 mb-1">Fin del período</label>
-                            <input type="date" value={cfgData[`periodo_${p}_fin`] || ''}
-                              onChange={e => setCfgData((prev: any) => ({...prev, [`periodo_${p}_fin`]: e.target.value}))}
-                              className="w-full border border-gray-200 rounded-lg p-2 text-sm text-gray-900 outline-none focus:border-blue-400" />
-                          </div>
-                        </div>
-                        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Apertura / Cierre automático</p>
-                        <div className="grid grid-cols-2 gap-3">
-                          <div className="bg-green-50 rounded-lg p-3">
-                            <p className="text-xs font-semibold text-green-700 mb-2">🟢 Apertura</p>
-                            <input type="date" value={ps.openDate || ''}
-                              onChange={e => setPsVal(String(p), 'openDate', e.target.value)}
-                              className="w-full border border-green-200 rounded-lg p-1.5 text-xs text-gray-900 mb-1.5 outline-none" />
-                            <div className="flex gap-1">
-                              <select value={ps.openHour || '7'} onChange={e => setPsVal(String(p), 'openHour', e.target.value)}
-                                className="flex-1 border border-green-200 rounded p-1 text-xs text-gray-900 outline-none">
-                                {hrs.map(h => <option key={h} value={h}>{h}</option>)}
-                              </select>
-                              <span className="text-gray-400 self-center text-xs">:</span>
-                              <select value={ps.openMin || '00'} onChange={e => setPsVal(String(p), 'openMin', e.target.value)}
-                                className="flex-1 border border-green-200 rounded p-1 text-xs text-gray-900 outline-none">
-                                {mins.map(m => <option key={m} value={m}>{m}</option>)}
-                              </select>
-                              <select value={ps.openAmPm || 'AM'} onChange={e => setPsVal(String(p), 'openAmPm', e.target.value)}
-                                className="w-12 border border-green-200 rounded p-1 text-xs text-gray-900 outline-none">
-                                <option value="AM">AM</option><option value="PM">PM</option>
-                              </select>
-                            </div>
-                          </div>
-                          <div className="bg-red-50 rounded-lg p-3">
-                            <p className="text-xs font-semibold text-red-700 mb-2">🔴 Cierre</p>
-                            <input type="date" value={ps.closeDate || ''}
-                              onChange={e => setPsVal(String(p), 'closeDate', e.target.value)}
-                              className="w-full border border-red-200 rounded-lg p-1.5 text-xs text-gray-900 mb-1.5 outline-none" />
-                            <div className="flex gap-1">
-                              <select value={ps.closeHour || '11'} onChange={e => setPsVal(String(p), 'closeHour', e.target.value)}
-                                className="flex-1 border border-red-200 rounded p-1 text-xs text-gray-900 outline-none">
-                                {hrs.map(h => <option key={h} value={h}>{h}</option>)}
-                              </select>
-                              <span className="text-gray-400 self-center text-xs">:</span>
-                              <select value={ps.closeMin || '59'} onChange={e => setPsVal(String(p), 'closeMin', e.target.value)}
-                                className="flex-1 border border-red-200 rounded p-1 text-xs text-gray-900 outline-none">
-                                {mins.map(m => <option key={m} value={m}>{m}</option>)}
-                              </select>
-                              <select value={ps.closeAmPm || 'PM'} onChange={e => setPsVal(String(p), 'closeAmPm', e.target.value)}
-                                className="w-12 border border-red-200 rounded p-1 text-xs text-gray-900 outline-none">
-                                <option value="AM">AM</option><option value="PM">PM</option>
-                              </select>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    )
-                  })}
-                </div>
-              )}
-
-              {/* ESTUDIANTES */}
-              {cfgTab === 'estudiantes' && (
-                <div>
-                  <div className="bg-gray-50 rounded-xl p-4 mb-4">
-                    <p className="text-xs font-bold text-gray-600 mb-3">Agregar estudiante</p>
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-2">
-                      <input type="text" value={newStNombre} onChange={e => setNewStNombre(e.target.value)}
-                        placeholder="Nombre completo"
-                        className="border border-gray-200 rounded-lg p-2 text-sm text-gray-900 outline-none focus:border-blue-400" />
-                      <input type="email" value={newStEmail} onChange={e => setNewStEmail(e.target.value)}
-                        placeholder="Correo (opcional)"
-                        className="border border-gray-200 rounded-lg p-2 text-sm text-gray-900 outline-none focus:border-blue-400" />
-                      <input type="text" value={newStGrado} onChange={e => setNewStGrado(e.target.value)}
-                        placeholder="Grado (ej: 6, 10)"
-                        className="border border-gray-200 rounded-lg p-2 text-sm text-gray-900 outline-none focus:border-blue-400" />
-                    </div>
-                    <button onClick={addCfgStudent} disabled={addingCfgSt || !newStNombre.trim() || !newStGrado.trim()}
-                      className="bg-blue-700 hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold disabled:opacity-50 transition">
-                      {addingCfgSt ? 'Guardando...' : '+ Agregar'}
-                    </button>
-                  </div>
-                  <input type="text" value={cfgStFilter} onChange={e => setCfgStFilter(e.target.value)}
-                    placeholder="Buscar por nombre o grado..."
-                    className="w-full border border-gray-200 rounded-lg p-2.5 text-sm text-gray-900 mb-3 outline-none focus:border-blue-400" />
-                  {loadingCfgSt ? (
-                    <div className="text-center py-8 text-gray-400 text-sm">Cargando...</div>
-                  ) : (
-                    <div className="rounded-xl border border-gray-200 overflow-hidden">
-                      <div className="px-4 py-2 bg-gray-50 border-b border-gray-200 flex justify-between items-center">
-                        <span className="text-xs font-semibold text-gray-500">
-                          {cfgStudents.filter(s => !cfgStFilter || s.nombre.toLowerCase().includes(cfgStFilter.toLowerCase()) || s.grado.toLowerCase().includes(cfgStFilter.toLowerCase())).length} estudiantes
-                        </span>
-                        <button onClick={loadCfgStudents} className="text-xs text-gray-400 hover:text-gray-600">↻ Recargar</button>
-                      </div>
-                      <div className="max-h-72 overflow-y-auto">
-                        <table className="w-full text-sm">
-                          <thead className="bg-gray-50 text-xs text-gray-500 uppercase sticky top-0">
-                            <tr>
-                              <th className="text-left px-4 py-2">Nombre</th>
-                              <th className="text-left px-4 py-2">Grado</th>
-                              <th className="text-center px-4 py-2">Acción</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {cfgStudents
-                              .filter(s => !cfgStFilter || s.nombre.toLowerCase().includes(cfgStFilter.toLowerCase()) || s.grado.toLowerCase().includes(cfgStFilter.toLowerCase()))
-                              .map(s => (
-                                <tr key={s.id} className="border-t border-gray-100 hover:bg-gray-50">
-                                  <td className="px-4 py-2 text-gray-800">{s.nombre}</td>
-                                  <td className="px-4 py-2"><span className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full text-xs">{s.grado}</span></td>
-                                  <td className="px-4 py-2 text-center">
-                                    <button onClick={() => deleteCfgStudent(s.id)} className="text-red-500 hover:text-red-700 text-xs font-medium">Eliminar</button>
-                                  </td>
-                                </tr>
-                              ))}
-                            {cfgStudents.length === 0 && (
-                              <tr><td colSpan={3} className="px-4 py-8 text-center text-gray-400 text-sm">No hay estudiantes registrados.</td></tr>
-                            )}
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-
-            {/* Footer */}
-            {cfgTab !== 'estudiantes' && (
-              <div className="border-t border-gray-200 px-6 py-4 flex justify-between items-center flex-shrink-0">
-                <span className={`text-sm font-medium transition-opacity ${cfgSaved ? 'opacity-100 text-green-600' : 'opacity-0'}`}>
-                  ✅ Configuración guardada
-                </span>
-                <div className="flex gap-2">
-                  <button onClick={() => setCfgOpen(false)} className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 font-medium">Cerrar</button>
-                  <button onClick={saveCfgData} disabled={savingCfg}
-                    className="px-6 py-2 bg-blue-700 hover:bg-blue-600 text-white rounded-lg text-sm font-semibold disabled:opacity-50 transition">
-                    {savingCfg ? 'Guardando...' : '💾 Guardar'}
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
 
       {/* Modal: Criterios personalizados */}
       {ciGroup && (
@@ -762,26 +459,26 @@ export default function TeacherPage() {
             <div className="flex justify-between items-center mb-4">
               <div>
                 <h2 className="font-bold text-blue-900">Criterios adicionales</h2>
-                <p className="text-sm text-gray-500">{ciGroup.materia} · {ciGroup.gradeLabel}</p>
+                <p className="text-sm text-gray-500">{ciGroup.materia} Â· {ciGroup.gradeLabel}</p>
               </div>
-              <button onClick={() => setCiGroup(null)} className="text-gray-400 hover:text-gray-600 text-xl font-bold">✕</button>
+              <button onClick={() => setCiGroup(null)} className="text-gray-400 hover:text-gray-600 text-xl font-bold">âœ•</button>
             </div>
 
             <p className="text-xs text-gray-500 mb-4 bg-amber-50 p-3 rounded-lg">
-              Define hasta 2 criterios de evaluación adicionales para este grupo. Los estudiantes verán estos ítems al final del formulario.
+              Define hasta 2 criterios de evaluaciÃ³n adicionales para este grupo. Los estudiantes verÃ¡n estos Ã­tems al final del formulario.
             </p>
 
             <div className="mb-4">
               <label className="block text-sm font-semibold text-gray-700 mb-1">Criterio adicional 1 (opcional)</label>
               <input type="text" value={ciItem1} onChange={e => setCiItem1(e.target.value)} maxLength={120}
-                placeholder="Ej: Participé activamente en los proyectos de aula..."
+                placeholder="Ej: ParticipÃ© activamente en los proyectos de aula..."
                 className="w-full border-2 border-gray-200 rounded-lg p-2.5 text-sm text-gray-900 focus:border-amber-400 outline-none" />
             </div>
 
             <div className="mb-6">
               <label className="block text-sm font-semibold text-gray-700 mb-1">Criterio adicional 2 (opcional)</label>
               <input type="text" value={ciItem2} onChange={e => setCiItem2(e.target.value)} maxLength={120}
-                placeholder="Ej: Demostré habilidades de investigación..."
+                placeholder="Ej: DemostrÃ© habilidades de investigaciÃ³n..."
                 className="w-full border-2 border-gray-200 rounded-lg p-2.5 text-sm text-gray-900 focus:border-amber-400 outline-none" />
             </div>
 

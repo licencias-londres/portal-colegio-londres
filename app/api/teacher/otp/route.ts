@@ -22,14 +22,23 @@ export async function POST(request: Request) {
 
   const emailLower = email.toLowerCase().trim()
 
-  // Permitir super admins
-  const isTeacher = !!TEACHER_DATA[emailLower]
+  // Verificar en BD primero, luego en datos estáticos
+  const { data: dbDoc } = await supabase
+    .from('docentes')
+    .select('nombre')
+    .eq('email', emailLower)
+    .eq('activo', true)
+    .limit(1)
+    .maybeSingle()
+
   const isSuperAdmin = SUPER_ADMINS.includes(emailLower)
+  const isTeacher    = !!dbDoc || !!TEACHER_DATA[emailLower]
+
   if (!isTeacher && !isSuperAdmin) {
     return NextResponse.json({ success: false, error: 'No estás registrado como docente.' })
   }
 
-  const teacherName = TEACHER_DATA[emailLower]?.nombre || 'Administrador'
+  const teacherName = dbDoc?.nombre || TEACHER_DATA[emailLower]?.nombre || 'Docente'
 
   // — VALIDAR CORREO (sin enviar código — usado por login con contraseña) —
   if (action === 'checkEmail') {

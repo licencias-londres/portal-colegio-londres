@@ -18,7 +18,25 @@ export async function GET(request: Request) {
   }
 
   const emailLower = email.toLowerCase().trim()
-  const teacherInfo = TEACHER_DATA[emailLower]
+
+  // Obtener asignaciones desde BD; fallback a datos estáticos
+  let teacherInfo = TEACHER_DATA[emailLower]
+
+  const { data: dbRows } = await supabase
+    .from('docentes')
+    .select('nombre, grado, materia')
+    .eq('email', emailLower)
+    .eq('activo', true)
+
+  if (dbRows && dbRows.length > 0) {
+    const materias: Record<string, string[]> = {}
+    for (const row of dbRows) {
+      if (!materias[row.grado]) materias[row.grado] = []
+      if (!materias[row.grado].includes(row.materia)) materias[row.grado].push(row.materia)
+    }
+    teacherInfo = { nombre: dbRows[0].nombre, materias }
+  }
+
   if (!teacherInfo) {
     return NextResponse.json({ success: false, error: 'Docente no encontrado' }, { status: 404 })
   }
