@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useEffect, useState } from 'react'
 import { GRADE_NAMES, SUPER_ADMINS } from '@/lib/teacher-data'
@@ -7,8 +7,6 @@ import ConfigModal from '@/components/ConfigModal'
 const SESSION_KEY = 'teacher_session_v2'
 const SESSION_TTL = 8 * 60 * 60 * 1000 // 8 horas
 
-// ContraseÃ±a temporal compartida para todos los docentes
-// TODO: reemplazar por sistema OTP cuando se configure el proveedor de email
 const TEACHER_PASSWORD = 'Colondres1989'
 
 interface TeacherSession { email: string; nombre: string; expires: number }
@@ -41,19 +39,11 @@ function Ring({ pct, size = 64 }: { pct: number; size?: number }) {
 }
 
 export default function TeacherPage() {
-  // â€” Login por contraseÃ±a (activo) â€”
   const [phase, setPhase] = useState<'login' | 'dashboard'>('login')
   const [loginEmail, setLoginEmail]       = useState('')
   const [loginPassword, setLoginPassword] = useState('')
   const [loginError, setLoginError]       = useState('')
   const [logging, setLogging]             = useState(false)
-
-  /* â”€â”€ CÃ“DIGO OTP â€” comentado hasta configurar proveedor de email â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  // const [phase, setPhase] = useState<'login' | 'otp' | 'dashboard'>('login')
-  // const [otpCode, setOtpCode]   = useState('')
-  // const [sending, setSending]   = useState(false)
-  // const [verifying, setVerifying] = useState(false)
-  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
   const [session, setSession]     = useState<TeacherSession | null>(null)
   const [dashboard, setDashboard] = useState<DashboardData | null>(null)
@@ -69,10 +59,10 @@ export default function TeacherPage() {
   const [notifying, setNotifying]         = useState(false)
   const [notifyResult, setNotifyResult]   = useState('')
 
-  // Modal de configuraciÃ³n (solo super admins)
+  // Modal de configuración (solo super admins)
   const [cfgOpen, setCfgOpen] = useState(false)
 
-  // Restaurar sesiÃ³n guardada
+  // Restaurar sesión guardada
   useEffect(() => {
     const raw = localStorage.getItem(SESSION_KEY)
     if (!raw) return
@@ -103,12 +93,12 @@ export default function TeacherPage() {
     }
   }
 
-  // â€” Login con contraseÃ±a â€”
+  // Login con contraseña
   async function handleLogin() {
     if (!loginEmail.trim()) { setLoginError('Ingresa tu correo'); return }
-    if (!loginPassword)     { setLoginError('Ingresa tu contraseÃ±a'); return }
+    if (!loginPassword)     { setLoginError('Ingresa tu contraseña'); return }
     if (loginPassword !== TEACHER_PASSWORD) {
-      setLoginError('ContraseÃ±a incorrecta')
+      setLoginError('Contraseña incorrecta')
       return
     }
     setLogging(true); setLoginError('')
@@ -125,37 +115,6 @@ export default function TeacherPage() {
       setLoginError(d.error || 'Correo no registrado como docente')
     }
   }
-
-  /* â”€â”€ CÃ“DIGO OTP â€” comentado hasta configurar proveedor de email â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  // async function handleSendOtp() {
-  //   if (!loginEmail.trim()) { setLoginError('Ingresa tu correo'); return }
-  //   setSending(true); setLoginError('')
-  //   const r = await fetch('/api/teacher/otp', { method: 'POST',
-  //     headers: { 'Content-Type': 'application/json' },
-  //     body: JSON.stringify({ action: 'send', email: loginEmail.trim() }) })
-  //   const d = await r.json()
-  //   setSending(false)
-  //   if (d.success) setPhase('otp')
-  //   else setLoginError(d.error || 'Error enviando cÃ³digo')
-  // }
-  //
-  // async function handleVerifyOtp() {
-  //   if (!otpCode.trim()) { setLoginError('Ingresa el cÃ³digo'); return }
-  //   setVerifying(true); setLoginError('')
-  //   const r = await fetch('/api/teacher/otp', { method: 'POST',
-  //     headers: { 'Content-Type': 'application/json' },
-  //     body: JSON.stringify({ action: 'verify', email: loginEmail.trim(), code: otpCode.trim() }) })
-  //   const d = await r.json()
-  //   setVerifying(false)
-  //   if (d.success) {
-  //     const sess: TeacherSession = { email: d.email, nombre: d.nombre, expires: Date.now() + SESSION_TTL }
-  //     localStorage.setItem(SESSION_KEY, JSON.stringify(sess))
-  //     setSession(sess); setPhase('dashboard')
-  //   } else {
-  //     setLoginError(d.error || 'CÃ³digo incorrecto')
-  //   }
-  // }
-  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
   function handleLogout() {
     localStorage.removeItem(SESSION_KEY)
@@ -203,7 +162,7 @@ export default function TeacherPage() {
       }) })
     const d = await r.json()
     setNotifying(false)
-    setNotifyResult(d.success ? `âœ… Se enviaron ${d.sent} recordatorio(s).` : `âŒ ${d.error}`)
+    setNotifyResult(d.success ? `✅ Se enviaron ${d.sent} recordatorio(s).` : `❌ ${d.error}`)
   }
 
   function handlePrintGroup(group: Group) {
@@ -214,9 +173,9 @@ export default function TeacherPage() {
       <html><head><title>${group.materia} ${group.gradeLabel}</title>
       <style>body{font-family:Arial;padding:24px}table{width:100%;border-collapse:collapse}td,th{border:1px solid #ccc;padding:8px;text-align:left}h2{color:#1e3a5f}</style></head>
       <body>
-        <h2>Reporte de Pendientes â€” ${group.materia} ${group.gradeLabel}</h2>
-        <p>${dashboard.periodo}Â° Periodo ${dashboard.anio} Â· Docente: ${dashboard.teacher}</p>
-        <p>Enviados: ${group.submitted} / Total: ${group.totalStudents} Â· Pendientes: ${group.pendingCount}</p>
+        <h2>Reporte de Pendientes — ${group.materia} ${group.gradeLabel}</h2>
+        <p>${dashboard.periodo}° Periodo ${dashboard.anio} · Docente: ${dashboard.teacher}</p>
+        <p>Enviados: ${group.submitted} / Total: ${group.totalStudents} · Pendientes: ${group.pendingCount}</p>
         <table><tr><th>Estudiante</th><th>Estado</th></tr>${rows}</table>
       </body></html>`)
     win.document.close(); win.print()
@@ -227,7 +186,7 @@ export default function TeacherPage() {
     <div className="min-h-screen bg-blue-950 flex items-center justify-center px-4">
       <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-sm">
         <div className="text-center mb-6">
-          <div className="w-14 h-14 bg-blue-900 rounded-full flex items-center justify-center text-white text-2xl mx-auto mb-3">ðŸŽ“</div>
+          <div className="w-14 h-14 bg-blue-900 rounded-full flex items-center justify-center text-white text-2xl mx-auto mb-3">🎓</div>
           <h1 className="text-xl font-bold text-blue-900">Portal Docente</h1>
           <p className="text-sm text-gray-500">Colegio Londres</p>
         </div>
@@ -239,11 +198,11 @@ export default function TeacherPage() {
           placeholder="tunombre@colegiolondres.edu.co"
           className="w-full border-2 border-gray-200 rounded-lg p-3 text-sm text-gray-900 focus:border-blue-900 outline-none mb-3" />
 
-        <label className="block text-sm font-semibold text-blue-900 mb-1">ContraseÃ±a</label>
+        <label className="block text-sm font-semibold text-blue-900 mb-1">Contraseña</label>
         <input type="password" value={loginPassword}
           onChange={e => { setLoginPassword(e.target.value); setLoginError('') }}
           onKeyDown={e => e.key === 'Enter' && handleLogin()}
-          placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+          placeholder="••••••••••"
           className="w-full border-2 border-gray-200 rounded-lg p-3 text-sm text-gray-900 focus:border-blue-900 outline-none mb-3" />
 
         {loginError && <p className="text-red-500 text-sm mb-3">{loginError}</p>}
@@ -253,45 +212,12 @@ export default function TeacherPage() {
           {logging ? 'Verificando...' : 'Ingresar al portal'}
         </button>
 
-        {/* â”€â”€ BOTÃ“N OTP â€” comentado hasta configurar email â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-        <button onClick={handleSendOtp} disabled={sending}
-          className="w-full bg-blue-900 text-white py-3 rounded-lg font-semibold text-sm hover:bg-blue-800 disabled:opacity-50">
-          {sending ? 'Enviando cÃ³digo...' : 'Recibir cÃ³digo OTP'}
-        </button>
-        â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
-
         <p className="text-center text-xs text-gray-400 mt-6">
-          <a href="/autoevaluacion" className="hover:text-gray-600">â† Volver a autoevaluaciÃ³n</a>
+          <a href="/autoevaluacion" className="hover:text-gray-600">← Volver a autoevaluación</a>
         </p>
       </div>
     </div>
   )
-
-  /* â”€â”€ PANTALLA OTP â€” comentada hasta configurar email â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  if (phase === 'otp') return (
-    <div className="min-h-screen bg-blue-950 flex items-center justify-center px-4">
-      <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-sm">
-        ...pantalla de ingreso de cÃ³digo OTP...
-        <p className="text-sm text-gray-600 mb-4 text-center">
-          CÃ³digo enviado a <strong>{loginEmail}</strong>. Revisa tu correo.
-        </p>
-        <input type="text" inputMode="numeric" maxLength={6} value={otpCode}
-          onChange={e => { setOtpCode(e.target.value); setLoginError('') }}
-          onKeyDown={e => e.key === 'Enter' && handleVerifyOtp()}
-          placeholder="000000"
-          className="w-full border-2 border-gray-200 rounded-lg p-3 text-center text-2xl font-bold tracking-widest focus:border-blue-900 outline-none mb-3" />
-        <button onClick={handleVerifyOtp} disabled={verifying}
-          className="w-full bg-blue-900 text-white py-3 rounded-lg font-semibold text-sm hover:bg-blue-800 disabled:opacity-50 mb-2">
-          {verifying ? 'Verificando...' : 'Ingresar al portal'}
-        </button>
-        <button onClick={() => { setPhase('login'); setOtpCode(''); setLoginError('') }}
-          className="w-full text-sm text-gray-400 hover:text-gray-600 py-2">
-          â† Cambiar correo
-        </button>
-      </div>
-    </div>
-  )
-  â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
   // ====================================================== DASHBOARD
   return (
@@ -300,21 +226,21 @@ export default function TeacherPage() {
       <header className="bg-blue-900 text-white px-6 py-4 flex justify-between items-center shadow-lg">
         <div>
           <h1 className="text-lg font-bold">{session?.nombre}</h1>
-          <p className="text-sm text-blue-300">Portal Docente â€” Colegio Londres</p>
+          <p className="text-sm text-blue-300">Portal Docente — Colegio Londres</p>
         </div>
         <div className="flex items-center gap-3">
           {dashboard && (
             <select value={periodoFilter} onChange={e => setPeriodoFilter(e.target.value)}
               className="bg-blue-800 text-white border border-blue-600 rounded-lg px-3 py-1.5 text-sm">
               {['1','2','3','4'].map(p => (
-                <option key={p} value={p}>{p}Â° Periodo {dashboard.anio}</option>
+                <option key={p} value={p}>{p}° Periodo {dashboard.anio}</option>
               ))}
             </select>
           )}
           {session && SUPER_ADMINS.includes(session.email) && (
             <button onClick={() => setCfgOpen(true)}
               className="text-sm bg-red-700 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition flex items-center gap-1.5 font-medium">
-              âš™ï¸ ConfiguraciÃ³n
+              ⚙️ Configuración
             </button>
           )}
           <button onClick={handleLogout}
@@ -326,7 +252,7 @@ export default function TeacherPage() {
 
       <div className="max-w-6xl mx-auto px-4 py-6">
 
-        {/* Resumen rÃ¡pido */}
+        {/* Resumen rápido */}
         {dashboard && (
           <div className="grid grid-cols-3 gap-4 mb-6">
             {[
@@ -364,15 +290,14 @@ export default function TeacherPage() {
 
                   <div className="text-xs text-gray-500 mb-3">
                     <span className="text-green-600 font-semibold">{group.submitted} enviaron</span>
-                    {' Â· '}
+                    {' · '}
                     <span className="text-red-500 font-semibold">{group.pendingCount} pendientes</span>
-                    {' Â· '}{group.totalStudents} total
+                    {' · '}{group.totalStudents} total
                   </div>
 
-                  {/* Ãtem personalizado badge */}
                   {(group.ci?.item1 || group.ci?.item2) && (
                     <div className="text-xs bg-amber-50 text-amber-700 border border-amber-200 rounded-lg px-2 py-1 mb-3">
-                      âœï¸ {[group.ci.item1, group.ci.item2].filter(Boolean).length} criterio(s) adicional(es)
+                      ✏️ {[group.ci.item1, group.ci.item2].filter(Boolean).length} criterio(s) adicional(es)
                     </div>
                   )}
 
@@ -384,12 +309,12 @@ export default function TeacherPage() {
                     {group.formType === 'bachillerato' && (
                       <button onClick={() => openCiModal(group)}
                         className="text-xs bg-amber-100 hover:bg-amber-200 text-amber-800 px-3 py-1.5 rounded-lg font-medium transition">
-                        âœï¸ Criterios extra
+                        ✏️ Criterios extra
                       </button>
                     )}
                     <button onClick={() => handlePrintGroup(group)}
                       className="text-xs bg-blue-100 hover:bg-blue-200 text-blue-800 px-3 py-1.5 rounded-lg font-medium transition">
-                      ðŸ–¨ï¸ PDF
+                      🖨️ PDF
                     </button>
                   </div>
                 </div>
@@ -400,7 +325,7 @@ export default function TeacherPage() {
 
         {!loading && dashboard && dashboard.groups.length === 0 && (
           <div className="text-center py-20 text-gray-400">
-            <p className="text-4xl mb-4">ðŸ“‹</p>
+            <p className="text-4xl mb-4">📋</p>
             <p>No tienes grupos asignados para este periodo.</p>
           </div>
         )}
@@ -413,14 +338,14 @@ export default function TeacherPage() {
             <div className="flex justify-between items-center mb-4">
               <div>
                 <h2 className="font-bold text-blue-900 text-lg">{pendingGroup.materia}</h2>
-                <p className="text-sm text-gray-500">{pendingGroup.gradeLabel} Â· {pendingGroup.pendingCount} pendiente(s)</p>
+                <p className="text-sm text-gray-500">{pendingGroup.gradeLabel} · {pendingGroup.pendingCount} pendiente(s)</p>
               </div>
               <button onClick={() => { setPendingGroup(null); setNotifyResult('') }}
-                className="text-gray-400 hover:text-gray-600 text-xl font-bold">âœ•</button>
+                className="text-gray-400 hover:text-gray-600 text-xl font-bold">✕</button>
             </div>
 
             {pendingGroup.pendingNames.length === 0 ? (
-              <div className="text-center py-6 text-green-600 font-semibold">âœ… Â¡Todos completaron la autoevaluaciÃ³n!</div>
+              <div className="text-center py-6 text-green-600 font-semibold">✅ ¡Todos completaron la autoevaluación!</div>
             ) : (
               <>
                 <div className="max-h-60 overflow-y-auto mb-4">
@@ -433,14 +358,14 @@ export default function TeacherPage() {
                 </div>
 
                 {notifyResult && (
-                  <div className={`text-sm p-3 rounded-lg mb-3 ${notifyResult.startsWith('âœ…') ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
+                  <div className={`text-sm p-3 rounded-lg mb-3 ${notifyResult.startsWith('✅') ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
                     {notifyResult}
                   </div>
                 )}
 
                 <button onClick={() => sendNotification(pendingGroup)} disabled={notifying}
                   className="w-full bg-blue-900 text-white py-2.5 rounded-lg text-sm font-semibold hover:bg-blue-800 disabled:opacity-50">
-                  {notifying ? 'Enviando correos...' : `ðŸ“§ Enviar recordatorio a ${pendingGroup.pendingCount} estudiante(s)`}
+                  {notifying ? 'Enviando correos...' : `📧 Enviar recordatorio a ${pendingGroup.pendingCount} estudiante(s)`}
                 </button>
               </>
             )}
@@ -448,9 +373,8 @@ export default function TeacherPage() {
         </div>
       )}
 
-      {/* Modal: ConfiguraciÃ³n (super admins) â€” componente compartido */}
+      {/* Modal: Configuración (super admins) */}
       <ConfigModal open={cfgOpen} onClose={() => setCfgOpen(false)} />
-
 
       {/* Modal: Criterios personalizados */}
       {ciGroup && (
@@ -459,26 +383,26 @@ export default function TeacherPage() {
             <div className="flex justify-between items-center mb-4">
               <div>
                 <h2 className="font-bold text-blue-900">Criterios adicionales</h2>
-                <p className="text-sm text-gray-500">{ciGroup.materia} Â· {ciGroup.gradeLabel}</p>
+                <p className="text-sm text-gray-500">{ciGroup.materia} · {ciGroup.gradeLabel}</p>
               </div>
-              <button onClick={() => setCiGroup(null)} className="text-gray-400 hover:text-gray-600 text-xl font-bold">âœ•</button>
+              <button onClick={() => setCiGroup(null)} className="text-gray-400 hover:text-gray-600 text-xl font-bold">✕</button>
             </div>
 
             <p className="text-xs text-gray-500 mb-4 bg-amber-50 p-3 rounded-lg">
-              Define hasta 2 criterios de evaluaciÃ³n adicionales para este grupo. Los estudiantes verÃ¡n estos Ã­tems al final del formulario.
+              Define hasta 2 criterios de evaluación adicionales para este grupo. Los estudiantes verán estos ítems al final del formulario.
             </p>
 
             <div className="mb-4">
               <label className="block text-sm font-semibold text-gray-700 mb-1">Criterio adicional 1 (opcional)</label>
               <input type="text" value={ciItem1} onChange={e => setCiItem1(e.target.value)} maxLength={120}
-                placeholder="Ej: ParticipÃ© activamente en los proyectos de aula..."
+                placeholder="Ej: Participé activamente en los proyectos de aula..."
                 className="w-full border-2 border-gray-200 rounded-lg p-2.5 text-sm text-gray-900 focus:border-amber-400 outline-none" />
             </div>
 
             <div className="mb-6">
               <label className="block text-sm font-semibold text-gray-700 mb-1">Criterio adicional 2 (opcional)</label>
               <input type="text" value={ciItem2} onChange={e => setCiItem2(e.target.value)} maxLength={120}
-                placeholder="Ej: DemostrÃ© habilidades de investigaciÃ³n..."
+                placeholder="Ej: Demostré habilidades de investigación..."
                 className="w-full border-2 border-gray-200 rounded-lg p-2.5 text-sm text-gray-900 focus:border-amber-400 outline-none" />
             </div>
 
