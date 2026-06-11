@@ -289,11 +289,12 @@ export default function ConfigModal({ open, onClose }: Props) {
                     className="w-full border-2 border-gray-200 rounded-lg p-2.5 text-sm text-gray-900 focus:border-blue-600 outline-none" />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-gray-500 mb-1">Período activo</label>
+                  <label className="block text-xs font-semibold text-gray-500 mb-1">Período activo (respaldo)</label>
                   <select value={cfg.periodo || ''} onChange={e => setCfg((p: any) => ({...p, periodo: e.target.value}))}
                     className="w-full border-2 border-gray-200 rounded-lg p-2.5 text-sm text-gray-900 focus:border-blue-600 outline-none">
                     {['1','2','3','4'].map(p => <option key={p} value={p}>{p}° Período</option>)}
                   </select>
+                  <p className="text-xs text-gray-400 mt-1">Se calcula automáticamente según las fechas de Períodos. Este valor se usa solo si la fecha actual no cae en ningún rango.</p>
                 </div>
               </div>
               <div>

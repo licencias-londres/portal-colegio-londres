@@ -24,8 +24,27 @@ export async function GET() {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
-  // Compute effective estado from platform_schedule if dates are configured
-  const ps = (data.platform_schedule || {})[String(data.periodo)]
+  // Calcular período activo según fecha actual vs rangos de inicio/fin
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  let activePeriodo = String(data.periodo) // respaldo: período guardado manualmente
+
+  for (const p of [1, 2, 3, 4]) {
+    const inicio = data[`periodo_${p}_inicio`]
+    const fin    = data[`periodo_${p}_fin`]
+    if (inicio && fin) {
+      const start = new Date(inicio + 'T00:00:00')
+      const end   = new Date(fin    + 'T23:59:59')
+      if (today >= start && today <= end) {
+        activePeriodo = String(p)
+        break
+      }
+    }
+  }
+  data.periodo = activePeriodo
+
+  // Calcular estado efectivo desde platform_schedule si hay fechas configuradas
+  const ps = (data.platform_schedule || {})[activePeriodo]
   if (ps?.openDate && ps?.closeDate) {
     const now   = new Date()
     const open  = new Date(`${ps.openDate}T${toH24(ps.openHour, ps.openMin, ps.openAmPm || 'AM')}`)
