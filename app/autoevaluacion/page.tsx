@@ -377,7 +377,7 @@ export default function AutoevaluacionPage() {
         </div>
       )}
 
-      <div className="max-w-2xl mx-auto px-4 py-6">
+      <div className={`mx-auto px-4 py-6 ${ft === 'bachillerato' ? 'max-w-6xl' : 'max-w-2xl'}`}>
 
         {ft === 'none' && (
           <div className="bg-white rounded-2xl shadow p-8 text-center">
@@ -454,128 +454,192 @@ export default function AutoevaluacionPage() {
           const vals = bachValues[mat] || {}
           const ci   = customItems[mat]
           const avg  = calcAvgMat(mat, vals)
+          const completadas = Object.values(bachSubmitted).filter(Boolean).length
           const allFilled = CRITERIOS.every(c => vals[c.id]!==null)
             && (!ci?.item1 || bachCi1[mat]!==null) && (!ci?.item2 || bachCi2[mat]!==null)
             && (!ci?.item1 || !!(bachCi1j[mat]||'').trim()) && (!ci?.item2 || !!(bachCi2j[mat]||'').trim())
           const hasRef = !!(bachReflexion[mat]||'').trim()
+          const pctBar = Math.round((completadas / materias.length) * 100)
           return (
             <div>
-              <div className="bg-white rounded-2xl shadow p-4 mb-4">
-                <p className="text-xs font-bold text-gray-400 uppercase mb-2">
-                  {Object.values(bachSubmitted).filter(Boolean).length} / {materias.length} materias enviadas
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {materias.map((m,i) => (
-                    <button key={m} onClick={() => setCurrentMateriaIdx(i)}
-                      className={`text-xs px-3 py-1.5 rounded-full font-semibold transition-all ${bachSubmitted[m]?'bg-green-100 text-green-700 border border-green-300':i===currentMateriaIdx?'bg-blue-900 text-white':'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
-                      {bachSubmitted[m]?'✓ ':''}{m}
-                    </button>
-                  ))}
+              {/* Barra de info del estudiante */}
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 px-6 py-4 mb-4 flex flex-wrap gap-6 items-center">
+                <div>
+                  <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Estudiante</p>
+                  <p className="font-bold text-blue-900 text-base">{currentName}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Grado</p>
+                  <p className="font-bold text-blue-900 text-base">{GRADE_NAMES[gn] || currentGrade}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Periodo</p>
+                  <p className="font-bold text-blue-900 text-base">{config?.periodo}° Periodo · {config?.anio}</p>
                 </div>
               </div>
 
-              <div className="bg-white rounded-2xl shadow p-6">
-                <div className="flex items-center gap-3 mb-6">
-                  <span className="bg-blue-900 text-white text-xs font-bold px-3 py-1 rounded-full">{currentMateriaIdx+1} / {materias.length}</span>
-                  <h2 className="font-bold text-blue-900 text-lg">{mat}</h2>
-                </div>
-                <p className="text-sm text-gray-500 mb-6 bg-blue-50 p-3 rounded-lg">Valora cada criterio del <strong>1 al 5</strong>. El promedio se calcula automáticamente.</p>
+              {/* Layout dos columnas */}
+              <div className="flex gap-4 items-start">
 
-                {CRITERIOS.map((cr, idx) => (
-                  <div key={cr.id} className="mb-5">
-                    <label className="block text-sm font-semibold text-blue-900 mb-2">{idx+1}. {cr.label}</label>
-                    <div className="flex gap-2">
-                      {[1,2,3,4,5].map(n => (
-                        <button key={n} disabled={bachSubmitted[mat]}
-                          onClick={() => setBachValues(p => ({...p,[mat]:{...p[mat],[cr.id]:n}}))}
-                          className={`w-11 h-11 rounded-full border-2 font-bold text-sm transition-all ${vals[cr.id]===n?'bg-blue-900 border-blue-900 text-white':'border-blue-900 text-blue-900 hover:bg-blue-50 disabled:opacity-40'}`}>
-                          {n}
+                {/* ── Sidebar izquierdo: lista de materias ── */}
+                <div className="w-64 flex-shrink-0 bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                  <div className="bg-blue-900 px-4 py-3">
+                    <p className="text-white font-bold text-sm">Mis materias</p>
+                    <p className="text-blue-300 text-xs mt-0.5">{completadas} / {materias.length} completadas</p>
+                  </div>
+                  {/* Barra de progreso */}
+                  <div className="h-1.5 bg-gray-100">
+                    <div className="h-full bg-green-500 transition-all duration-500" style={{ width: `${pctBar}%` }} />
+                  </div>
+                  <ul className="py-2">
+                    {materias.map((m, i) => {
+                      const done    = !!bachSubmitted[m]
+                      const active  = i === currentMateriaIdx
+                      return (
+                        <li key={m}>
+                          <button onClick={() => setCurrentMateriaIdx(i)}
+                            className={`w-full flex items-center gap-3 px-4 py-2.5 text-left text-sm transition-all
+                              ${active  ? 'bg-blue-50 border-l-4 border-blue-900 font-bold text-blue-900'
+                              : done    ? 'text-green-700 hover:bg-green-50'
+                              : 'text-gray-600 hover:bg-gray-50'}`}>
+                            {/* Indicador */}
+                            <span className={`w-5 h-5 rounded-full flex-shrink-0 flex items-center justify-center text-xs font-bold border-2
+                              ${done   ? 'bg-green-500 border-green-500 text-white'
+                              : active ? 'bg-blue-900 border-blue-900 text-white'
+                              :          'border-gray-300 text-gray-300'}`}>
+                              {done ? '✓' : ''}
+                            </span>
+                            <span className="leading-tight">{m}</span>
+                          </button>
+                        </li>
+                      )
+                    })}
+                  </ul>
+                </div>
+
+                {/* ── Panel derecho: formulario ── */}
+                <div className="flex-1 min-w-0">
+                  {/* Texto introductorio */}
+                  <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 mb-4 text-sm text-gray-600 leading-relaxed">
+                    La autoevaluación es un proceso <strong>individual, consciente y responsable</strong> del proceso académico y actitudinal del estudiante.
+                    Responde de manera <strong>reflexiva y honesta</strong>, de acuerdo a tu proceso y compromiso durante este período.
+                    <strong> Las notas deben estar entre 1 y 5.</strong> El promedio es calculado automáticamente por el sistema.
+                  </div>
+
+                  <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                    {/* Encabezado de la materia */}
+                    <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
+                      <span className="bg-blue-900 text-white text-xs font-bold px-3 py-1.5 rounded-full">
+                        {completadas === materias.length ? `${materias.length}/${materias.length}` : `${currentMateriaIdx+1}/${materias.length}`}
+                      </span>
+                      <h2 className="font-bold text-blue-900 text-xl">{mat}</h2>
+                      {bachSubmitted[mat] && (
+                        <span className="ml-auto text-xs text-green-600 font-semibold bg-green-50 border border-green-200 px-2 py-1 rounded-full">✓ Enviada</span>
+                      )}
+                    </div>
+
+                    {CRITERIOS.map((cr, idx) => (
+                      <div key={cr.id} className="mb-6">
+                        <label className="block text-sm font-semibold text-gray-800 mb-2">{idx+1}. {cr.label}</label>
+                        <div className="flex gap-2">
+                          {[1,2,3,4,5].map(n => (
+                            <button key={n} disabled={bachSubmitted[mat]}
+                              onClick={() => setBachValues(p => ({...p,[mat]:{...p[mat],[cr.id]:n}}))}
+                              className={`w-11 h-11 rounded-full border-2 font-bold text-sm transition-all
+                                ${vals[cr.id]===n ? 'bg-blue-900 border-blue-900 text-white shadow-md'
+                                : bachSubmitted[mat] ? 'border-gray-200 text-gray-300 cursor-default'
+                                : 'border-blue-900 text-blue-900 hover:bg-blue-50'}`}>
+                              {n}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+
+                    {ci?.item1 && (
+                      <div className="mb-6 bg-amber-50 border-2 border-amber-300 rounded-xl p-4">
+                        <span className="inline-block bg-amber-400 text-white text-xs font-bold px-3 py-1 rounded-full mb-3">✏️ Criterio adicional</span>
+                        <label className="block text-sm font-semibold text-amber-900 mb-2">{CRITERIOS.length+1}. {ci.item1}</label>
+                        <div className="flex gap-2 mb-3">
+                          {[1,2,3,4,5].map(n => (
+                            <button key={n} disabled={bachSubmitted[mat]} onClick={() => setBachCi1(p => ({...p,[mat]:n}))}
+                              className={`w-11 h-11 rounded-full border-2 font-bold text-sm transition-all ${bachCi1[mat]===n?'bg-amber-500 border-amber-500 text-white':'border-amber-500 text-amber-800 hover:bg-amber-100 disabled:opacity-40'}`}>
+                              {n}
+                            </button>
+                          ))}
+                        </div>
+                        <textarea value={bachCi1j[mat]||''} onChange={e => setBachCi1j(p => ({...p,[mat]:e.target.value}))}
+                          disabled={bachSubmitted[mat]} rows={2}
+                          className="w-full border-2 border-amber-200 rounded-lg p-3 text-sm text-gray-900 focus:border-amber-500 outline-none disabled:bg-gray-50"
+                          placeholder="Justifica tu valoración en este criterio..." />
+                      </div>
+                    )}
+
+                    {ci?.item2 && (
+                      <div className="mb-6 bg-amber-50 border-2 border-amber-300 rounded-xl p-4">
+                        <span className="inline-block bg-amber-400 text-white text-xs font-bold px-3 py-1 rounded-full mb-3">✏️ Criterio adicional</span>
+                        <label className="block text-sm font-semibold text-amber-900 mb-2">{CRITERIOS.length+(ci.item1?2:1)}. {ci.item2}</label>
+                        <div className="flex gap-2 mb-3">
+                          {[1,2,3,4,5].map(n => (
+                            <button key={n} disabled={bachSubmitted[mat]} onClick={() => setBachCi2(p => ({...p,[mat]:n}))}
+                              className={`w-11 h-11 rounded-full border-2 font-bold text-sm transition-all ${bachCi2[mat]===n?'bg-amber-500 border-amber-500 text-white':'border-amber-500 text-amber-800 hover:bg-amber-100 disabled:opacity-40'}`}>
+                              {n}
+                            </button>
+                          ))}
+                        </div>
+                        <textarea value={bachCi2j[mat]||''} onChange={e => setBachCi2j(p => ({...p,[mat]:e.target.value}))}
+                          disabled={bachSubmitted[mat]} rows={2}
+                          className="w-full border-2 border-amber-200 rounded-lg p-3 text-sm text-gray-900 focus:border-amber-500 outline-none disabled:bg-gray-50"
+                          placeholder="Justifica tu valoración en este criterio..." />
+                      </div>
+                    )}
+
+                    <div className="mb-5 p-4 bg-blue-50 rounded-xl flex items-center gap-4">
+                      <div>
+                        <p className="text-xs font-semibold text-blue-700 uppercase tracking-wide">Nota final automática</p>
+                        <p className="text-4xl font-black text-blue-900">{avg}</p>
+                      </div>
+                    </div>
+
+                    <div className="mb-6">
+                      <label className="block text-sm font-semibold text-gray-800 mb-2">Justifica la nota y escribe tu compromiso de mejoramiento:</label>
+                      <textarea value={bachReflexion[mat]||''} onChange={e => setBachReflexion(p => ({...p,[mat]:e.target.value}))}
+                        disabled={bachSubmitted[mat]} rows={3}
+                        className="w-full border-2 border-gray-200 rounded-lg p-3 text-sm text-gray-900 focus:border-blue-900 outline-none disabled:bg-gray-50"
+                        placeholder="Escribe aquí tu reflexión y compromiso..." />
+                    </div>
+
+                    {bachSubmitted[mat] ? (
+                      <div className="bg-green-50 border border-green-300 rounded-xl p-4 text-center text-green-700 font-semibold text-sm">
+                        ✅ {mat} — guardada correctamente
+                      </div>
+                    ) : (
+                      <button onClick={() => submitMateria(currentMateriaIdx)} disabled={submitting||!allFilled||!hasRef}
+                        className="w-full bg-green-600 text-white py-3 rounded-lg font-bold disabled:opacity-50 hover:bg-green-700 text-base">
+                        {submitting ? 'Enviando...' : `✅ Enviar ${mat}`}
+                      </button>
+                    )}
+
+                    <div className="flex justify-between mt-4">
+                      <button onClick={() => setCurrentMateriaIdx(i => Math.max(0,i-1))} disabled={currentMateriaIdx===0}
+                        className="text-sm bg-gray-100 text-gray-700 px-4 py-2 rounded-lg disabled:opacity-40 hover:bg-gray-200">
+                        ← Anterior
+                      </button>
+                      {currentMateriaIdx < materias.length-1 ? (
+                        <button onClick={() => setCurrentMateriaIdx(i => i+1)}
+                          className="text-sm bg-blue-900 text-white px-4 py-2 rounded-lg hover:bg-blue-800">
+                          Siguiente →
                         </button>
-                      ))}
+                      ) : (
+                        <button onClick={handleFinish} disabled={completadas === 0}
+                          className="text-sm bg-green-600 text-white px-4 py-2 rounded-lg disabled:opacity-50 hover:bg-green-700">
+                          Finalizar ✓
+                        </button>
+                      )}
                     </div>
                   </div>
-                ))}
-
-                {ci?.item1 && (
-                  <div className="mb-5 bg-amber-50 border-2 border-amber-300 rounded-xl p-4">
-                    <span className="inline-block bg-amber-400 text-white text-xs font-bold px-3 py-1 rounded-full mb-3">✏️ Criterio adicional</span>
-                    <label className="block text-sm font-semibold text-amber-900 mb-2">{CRITERIOS.length+1}. {ci.item1}</label>
-                    <div className="flex gap-2 mb-3">
-                      {[1,2,3,4,5].map(n => (
-                        <button key={n} disabled={bachSubmitted[mat]} onClick={() => setBachCi1(p => ({...p,[mat]:n}))}
-                          className={`w-11 h-11 rounded-full border-2 font-bold text-sm transition-all ${bachCi1[mat]===n?'bg-amber-500 border-amber-500 text-white':'border-amber-500 text-amber-800 hover:bg-amber-100 disabled:opacity-40'}`}>
-                          {n}
-                        </button>
-                      ))}
-                    </div>
-                    <textarea value={bachCi1j[mat]||''} onChange={e => setBachCi1j(p => ({...p,[mat]:e.target.value}))}
-                      disabled={bachSubmitted[mat]} rows={2}
-                      className="w-full border-2 border-amber-200 rounded-lg p-3 text-sm text-gray-900 focus:border-amber-500 outline-none disabled:bg-gray-50"
-                      placeholder="Justifica tu valoración en este criterio..." />
-                  </div>
-                )}
-
-                {ci?.item2 && (
-                  <div className="mb-5 bg-amber-50 border-2 border-amber-300 rounded-xl p-4">
-                    <span className="inline-block bg-amber-400 text-white text-xs font-bold px-3 py-1 rounded-full mb-3">✏️ Criterio adicional</span>
-                    <label className="block text-sm font-semibold text-amber-900 mb-2">{CRITERIOS.length+(ci.item1?2:1)}. {ci.item2}</label>
-                    <div className="flex gap-2 mb-3">
-                      {[1,2,3,4,5].map(n => (
-                        <button key={n} disabled={bachSubmitted[mat]} onClick={() => setBachCi2(p => ({...p,[mat]:n}))}
-                          className={`w-11 h-11 rounded-full border-2 font-bold text-sm transition-all ${bachCi2[mat]===n?'bg-amber-500 border-amber-500 text-white':'border-amber-500 text-amber-800 hover:bg-amber-100 disabled:opacity-40'}`}>
-                          {n}
-                        </button>
-                      ))}
-                    </div>
-                    <textarea value={bachCi2j[mat]||''} onChange={e => setBachCi2j(p => ({...p,[mat]:e.target.value}))}
-                      disabled={bachSubmitted[mat]} rows={2}
-                      className="w-full border-2 border-amber-200 rounded-lg p-3 text-sm text-gray-900 focus:border-amber-500 outline-none disabled:bg-gray-50"
-                      placeholder="Justifica tu valoración en este criterio..." />
-                  </div>
-                )}
-
-                <div className="mb-4 p-4 bg-blue-50 rounded-xl">
-                  <p className="text-sm font-semibold text-blue-900">Nota final automática:</p>
-                  <p className="text-4xl font-black text-blue-900">{avg}</p>
-                </div>
-
-                <div className="mb-6">
-                  <label className="block text-sm font-semibold text-blue-900 mb-2">Justifica la nota y escribe tu compromiso de mejoramiento:</label>
-                  <textarea value={bachReflexion[mat]||''} onChange={e => setBachReflexion(p => ({...p,[mat]:e.target.value}))}
-                    disabled={bachSubmitted[mat]} rows={3}
-                    className="w-full border-2 border-gray-200 rounded-lg p-3 text-sm text-gray-900 focus:border-blue-900 outline-none disabled:bg-gray-50"
-                    placeholder="Escribe aquí..." />
-                </div>
-
-                {bachSubmitted[mat] ? (
-                  <div className="bg-green-50 border border-green-300 rounded-xl p-4 text-center text-green-700 font-semibold text-sm">
-                    ✅ {mat} — guardada correctamente
-                  </div>
-                ) : (
-                  <button onClick={() => submitMateria(currentMateriaIdx)} disabled={submitting||!allFilled||!hasRef}
-                    className="w-full bg-green-600 text-white py-3 rounded-lg font-bold disabled:opacity-50 hover:bg-green-700">
-                    {submitting ? 'Enviando...' : `✅ Enviar ${mat}`}
-                  </button>
-                )}
-
-                <div className="flex justify-between mt-4">
-                  <button onClick={() => setCurrentMateriaIdx(i => Math.max(0,i-1))} disabled={currentMateriaIdx===0}
-                    className="text-sm bg-gray-100 px-4 py-2 rounded-lg disabled:opacity-40 hover:bg-gray-200">
-                    ← Anterior
-                  </button>
-                  {currentMateriaIdx < materias.length-1 ? (
-                    <button onClick={() => setCurrentMateriaIdx(i => i+1)}
-                      className="text-sm bg-blue-900 text-white px-4 py-2 rounded-lg hover:bg-blue-800">
-                      Siguiente →
-                    </button>
-                  ) : (
-                    <button onClick={handleFinish} disabled={Object.values(bachSubmitted).filter(Boolean).length===0}
-                      className="text-sm bg-green-600 text-white px-4 py-2 rounded-lg disabled:opacity-50 hover:bg-green-700">
-                      Finalizar ✓
-                    </button>
-                  )}
-                </div>
-              </div>
+                </div>{/* fin panel derecho */}
+              </div>{/* fin grid */}
             </div>
           )
         })()}
