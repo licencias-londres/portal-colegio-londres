@@ -1,23 +1,23 @@
-/* Hallmark · genre: editorial · macrostructure: Index-First · theme: Almanac
- * enrichment: none (typography only) · nav: N3 (side-rail) · footer: Ft4 (dense colophon)
+/* Design system: Atelier Noir — premium minimal / Swiss-grid, generated with ui-ux-pro-max
  * Portable export — mirrored into app/globals.css for the running app.
  */
 
 :root {
-  /* Almanac — warm ledger palette. Anchor hue 60-70 (paper/ink), accent hue 27 (oxblood). */
-  --color-paper:      oklch(97% 0.014 70);
-  --color-paper-2:    oklch(94% 0.016 68);
-  --color-rule:       oklch(83% 0.014 66);
-  --color-neutral:    oklch(58% 0.012 60);
-  --color-muted:      oklch(42% 0.010 55);
-  --color-ink:        oklch(21% 0.014 50);
-  --color-accent:     oklch(40% 0.150 27);
-  --color-accent-ink: oklch(97% 0.014 70);
-  --color-focus:      oklch(50% 0.170 27);
+  /* Near-monochrome warm-neutral base + single muted bronze accent */
+  --color-paper:      oklch(98.3% 0.004 55);
+  --color-card:        oklch(99.4% 0.002 55);
+  --color-card-hover:  oklch(97.5% 0.005 55);
+  --color-border:      oklch(88% 0.006 55);
+  --color-border-hover: oklch(58% 0.100 70);
+  --color-ink:         oklch(19% 0.006 50);
+  --color-muted:        oklch(42% 0.008 55);
+  --color-accent:      oklch(45% 0.115 70);
+  --color-accent-ink:  oklch(99.4% 0.002 55);
+  --color-focus:       oklch(56% 0.130 70);
 
-  --font-display: "Cardo", "Iowan Old Style", Georgia, serif;
-  --font-body:    "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
-  --font-outlier: "Geist Mono", ui-monospace, "SFMono-Regular", monospace;
+  --font-display: var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-body:    var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-outlier: var(--font-jetbrains-mono), ui-monospace, "SFMono-Regular", monospace;
 
   --space-3xs: 0.125rem;
   --space-2xs: 0.25rem;
@@ -33,11 +33,11 @@
   --text-xs:      0.75rem;
   --text-sm:      0.875rem;
   --text-base:    1rem;
-  --text-md:      1.25rem;
-  --text-lg:      1.5625rem;
-  --text-xl:      1.9531rem;
-  --text-2xl:     2.4414rem;
-  --text-display: clamp(2.75rem, 5vw + 1rem, 5.25rem);
+  --text-md:      1.125rem;
+  --text-lg:      1.5rem;
+  --text-xl:      2rem;
+  --text-2xl:     2.75rem;
+  --text-display: clamp(2.25rem, 3vw + 1rem, 3.5rem);
 
   --ease-out:    cubic-bezier(0.16, 1, 0.3, 1);
   --ease-in:     cubic-bezier(0.7, 0, 0.84, 0);
@@ -45,10 +45,11 @@
 
   --dur-micro: 120ms;
   --dur-short: 220ms;
-  --dur-long:  420ms;
+  --dur-long:  360ms;
 
-  --radius-sm: 0.25rem;
-  --radius-md: 0.5rem;
+  --radius-sm: 0.375rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
 
   --z-base:     1;
   --z-raised:   10;
@@ -58,14 +59,15 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --color-paper:      oklch(16% 0.012 50);
-    --color-paper-2:    oklch(20% 0.014 50);
-    --color-rule:       oklch(32% 0.012 50);
-    --color-neutral:    oklch(62% 0.010 50);
-    --color-muted:      oklch(72% 0.008 50);
-    --color-ink:        oklch(94% 0.008 70);
-    --color-accent:     oklch(66% 0.150 27);
-    --color-accent-ink: oklch(16% 0.012 50);
-    --color-focus:      oklch(70% 0.160 27);
+    --color-paper:       oklch(15% 0.005 50);
+    --color-card:        oklch(18% 0.006 50);
+    --color-card-hover:  oklch(22% 0.007 50);
+    --color-border:      oklch(30% 0.008 50);
+    --color-border-hover: oklch(62% 0.110 70);
+    --color-ink:         oklch(95% 0.004 60);
+    --color-muted:        oklch(70% 0.008 55);
+    --color-accent:      oklch(70% 0.120 72);
+    --color-accent-ink:  oklch(15% 0.005 50);
+    --color-focus:       oklch(74% 0.130 72);
   }
 }
