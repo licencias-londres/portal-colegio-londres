@@ -1,11 +1,10 @@
-@import "tailwindcss";
-
 /* Hallmark · genre: editorial · macrostructure: Index-First · theme: Almanac
  * enrichment: none (typography only) · nav: N3 (side-rail) · footer: Ft4 (dense colophon)
- * pre-emit critique: P5 H4 E5 S4 R5 V5
+ * Portable export — mirrored into app/globals.css for the running app.
  */
 
 :root {
+  /* Almanac — warm ledger palette. Anchor hue 60-70 (paper/ink), accent hue 27 (oxblood). */
   --color-paper:      oklch(97% 0.014 70);
   --color-paper-2:    oklch(94% 0.016 68);
   --color-rule:       oklch(83% 0.014 66);
@@ -16,9 +15,9 @@
   --color-accent-ink: oklch(97% 0.014 70);
   --color-focus:      oklch(50% 0.170 27);
 
-  --font-display: var(--font-cardo), "Iowan Old Style", Georgia, serif;
-  --font-body:    var(--font-ibm-plex-sans), ui-sans-serif, system-ui, sans-serif;
-  --font-outlier: var(--font-geist-mono), ui-monospace, "SFMono-Regular", monospace;
+  --font-display: "Cardo", "Iowan Old Style", Georgia, serif;
+  --font-body:    "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-outlier: "Geist Mono", ui-monospace, "SFMono-Regular", monospace;
 
   --space-3xs: 0.125rem;
   --space-2xs: 0.25rem;
@@ -55,16 +54,6 @@
   --z-raised:   10;
   --z-dropdown: 100;
   --z-sticky:   200;
-
-  --background: var(--color-paper);
-  --foreground: var(--color-ink);
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-body);
-  --font-mono: var(--font-outlier);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -78,26 +67,5 @@
     --color-accent:     oklch(66% 0.150 27);
     --color-accent-ink: oklch(16% 0.012 50);
     --color-focus:      oklch(70% 0.160 27);
-  }
-}
-
-html,
-body {
-  overflow-x: clip;
-}
-
-body {
-  background: var(--color-paper);
-  color: var(--color-ink);
-  font-family: var(--font-body);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 150ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 150ms !important;
   }
 }
