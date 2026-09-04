@@ -12,6 +12,7 @@ import {
   SoccerBall,
   Crown,
 } from "@phosphor-icons/react/dist/ssr";
+import Image from "next/image";
 import styles from "./page.module.css";
 import PortalGrid, { type Categoria } from "./portal-grid";
 
@@ -121,10 +122,18 @@ export default function Home() {
 
       <header className={styles.header}>
         <div className={styles.wordmarkGroup}>
-          <p className={styles.wordmark}>Colegio Londres</p>
-          <p className={styles.subhead}>
-            Portal de sistemas institucionales — {total} herramientas en un solo lugar.
-          </p>
+          <Image
+            src="/logo-colegio-londres.png"
+            alt="Colegio Londres"
+            width={826}
+            height={392}
+            priority
+            className={styles.logo}
+          />
+          <div className={styles.wordmarkText}>
+            <p className={styles.wordmark}>Portal de Sistemas</p>
+            <p className={styles.subhead}>{total} herramientas institucionales en un solo lugar.</p>
+          </div>
         </div>
         <div className={styles.headerMeta}>
           <span className={styles.headerCount}>{total} sistemas activos</span>

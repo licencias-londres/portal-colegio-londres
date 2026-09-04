@@ -24,40 +24,66 @@
 /* ---------- Header ---------- */
 
 .header {
-  padding-block: var(--space-2xl) var(--space-xl);
+  padding-block: var(--space-xl);
   padding-inline: clamp(1.25rem, 5vw, 4rem);
   max-width: 88rem;
   margin-inline: auto;
   display: flex;
   flex-wrap: wrap;
-  align-items: flex-end;
+  align-items: center;
   justify-content: space-between;
-  gap: var(--space-md);
+  gap: var(--space-lg);
   border-bottom: 1px solid var(--color-border);
 }
 
 .wordmarkGroup {
   display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+@media (max-width: 26rem) {
+  .logo {
+    height: 2.5rem;
+  }
+  .wordmarkText {
+    padding-inline-start: 0;
+    border-inline-start: none;
+  }
+}
+
+.logo {
+  height: 3.25rem;
+  width: auto;
+  flex-shrink: 0;
+}
+
+.wordmarkText {
+  display: flex;
   flex-direction: column;
-  gap: var(--space-2xs);
+  gap: var(--space-3xs);
+  padding-inline-start: var(--space-md);
+  border-inline-start: 1px solid var(--color-border);
 }
 
 .wordmark {
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: var(--text-2xl);
-  letter-spacing: -0.02em;
-  line-height: 1.05;
+  font-size: var(--text-md);
+  letter-spacing: -0.01em;
+  line-height: 1.1;
   margin: 0;
+  color: var(--color-navy);
 }
 
 .subhead {
   font-family: var(--font-body);
   font-weight: 400;
-  font-size: var(--text-base);
+  font-size: var(--text-sm);
   color: var(--color-muted);
   margin: 0;
-  max-width: 42ch;
+  max-width: 38ch;
 }
 
 .headerMeta {
@@ -120,8 +146,8 @@
 }
 .tabActive,
 .tabActive:hover {
-  background: var(--color-ink);
-  border-color: var(--color-ink);
+  background: var(--color-navy);
+  border-color: var(--color-navy);
   color: var(--color-paper);
 }
 

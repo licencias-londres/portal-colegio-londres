@@ -1,19 +1,20 @@
-/* Design system: Atelier Noir — premium minimal / Swiss-grid, generated with ui-ux-pro-max
+/* Design system: Atelier Noir — anchored on the real Colegio Londres brand marks
+ * Navy #373558 / Red #E31E24, sampled from public/logo-colegio-londres.png
  * Portable export — mirrored into app/globals.css for the running app.
  */
 
 :root {
-  /* Near-monochrome warm-neutral base + single muted bronze accent */
-  --color-paper:      oklch(98.3% 0.004 55);
-  --color-card:        oklch(99.4% 0.002 55);
-  --color-card-hover:  oklch(97.5% 0.005 55);
-  --color-border:      oklch(88% 0.006 55);
-  --color-border-hover: oklch(58% 0.100 70);
-  --color-ink:         oklch(19% 0.006 50);
-  --color-muted:        oklch(42% 0.008 55);
-  --color-accent:      oklch(45% 0.115 70);
-  --color-accent-ink:  oklch(99.4% 0.002 55);
-  --color-focus:       oklch(56% 0.130 70);
+  --color-paper:        oklch(98.4% 0.004 285);
+  --color-card:         oklch(99.3% 0.002 285);
+  --color-card-hover:   oklch(94.5% 0.012 285);
+  --color-border:       oklch(87% 0.008 285);
+  --color-border-hover: oklch(45% 0.070 285);
+  --color-ink:          oklch(21% 0.030 286);
+  --color-navy:         oklch(34.8% 0.060 285);
+  --color-muted:        oklch(43% 0.018 286);
+  --color-accent:       oklch(50% 0.200 27);
+  --color-accent-ink:   oklch(99.3% 0.002 285);
+  --color-focus:        oklch(56% 0.200 27);
 
   --font-display: var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
   --font-body:    var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
@@ -59,15 +60,16 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --color-paper:       oklch(15% 0.005 50);
-    --color-card:        oklch(18% 0.006 50);
-    --color-card-hover:  oklch(22% 0.007 50);
-    --color-border:      oklch(30% 0.008 50);
-    --color-border-hover: oklch(62% 0.110 70);
-    --color-ink:         oklch(95% 0.004 60);
-    --color-muted:        oklch(70% 0.008 55);
-    --color-accent:      oklch(70% 0.120 72);
-    --color-accent-ink:  oklch(15% 0.005 50);
-    --color-focus:       oklch(74% 0.130 72);
+    --color-paper:        oklch(16% 0.014 286);
+    --color-card:         oklch(19% 0.016 286);
+    --color-card-hover:   oklch(24% 0.020 286);
+    --color-border:       oklch(32% 0.020 286);
+    --color-border-hover: oklch(62% 0.070 285);
+    --color-ink:          oklch(95% 0.006 286);
+    --color-navy:         oklch(72% 0.045 285);
+    --color-muted:        oklch(70% 0.014 286);
+    --color-accent:       oklch(66% 0.190 27);
+    --color-accent-ink:   oklch(16% 0.014 286);
+    --color-focus:        oklch(70% 0.190 27);
   }
 }
