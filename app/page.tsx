@@ -26,8 +26,9 @@ const categorias: Categoria[] = [
         descripcion: "Autoevaluación estudiantil por periodo académico, grados Transición a 11°",
         icono: "✍️",
         color: "from-blue-500 to-blue-700",
-        url: "/autoevaluacion",
+        url: "https://autoevaluacion-web.vercel.app",
         activo: true,
+        externo: true,
       },
       {
         id: 2,
